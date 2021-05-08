@@ -51,78 +51,34 @@
     
 <!-- <hr class="hr-divide-header" align="left"> -->
 
-      <!-- <img src="css/test.jpg" alt="main-page-cover-image" class="img-fluid"> -->
-<!-- <hr class="hr-divide"> -->
-<div id="main-page">
-  
-    <div class="blog-excerpt">
-   
-    <div class="image-wrapper">
-       
-        <img src="https://images.unsplash.com/photo-1494548162494-384bba4ab999?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80" alt="">
-       
-    </div>
-    <div class="excerpt-wrapper">
-      <a class="title" href="/2021/03/25/happyPack/">
-        happyPack多线程打包
-      </a>
-      <section class="excerpt"></section>
-      <div class="date">
-        2021/03/25
-      </div>
-    </div>
-   
-</div>
+      <a name="top"></a>
 
- 
-    <!-- <hr class="hr-divide"> -->
-  
-    <div class="blog-excerpt">
-   
-    <div class="image-wrapper">
-       
-        <img src="https://images.unsplash.com/photo-1494548162494-384bba4ab999?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80" alt="">
-       
-    </div>
-    <div class="excerpt-wrapper">
-      <a class="title" href="/2021/03/07/build-tools/">
-        前端构建工具原理分析
-      </a>
-      <section class="excerpt"></section>
-      <div class="date">
-        2021/03/07
-      </div>
-    </div>
-   
-</div>
+<section class="article">  
+  <h2 class="article-title">
+    ssh 免密码登录linux 
+  </h2>
+  <p class="article-date">
+    2019/07/08 17:56:40
+  </p>
 
- 
-    <!-- <hr class="hr-divide"> -->
-  
-    <div class="blog-excerpt">
-   
-    <div class="image-wrapper">
-       
-        <img src="https://images.unsplash.com/photo-1494548162494-384bba4ab999?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80" alt="">
-       
-    </div>
-    <div class="excerpt-wrapper">
-      <a class="title" href="/2020/11/24/linux01/">
-        linux命令—老记混系列
-      </a>
-      <section class="excerpt">常用的linux命令</section>
-      <div class="date">
-        2020/11/24
-      </div>
-    </div>
-   
-</div>
+  <hr class="hr-divide">
 
+  <div class="article-content">
+    <p>假设：从A机器免密码跳转到B机器上，双方用户都要求是eshop</p>
+<p>一、登录到A机器<br>     进入目录/home/eshop，运行ssh-keygen -t rsa<br>     会生成 隐藏目录 .ssh , 在该目录下会有 id_rsa（私钥） 和 id_rsa.pub（公钥） 两个文件</p>
+<p>二、B机器<br>    复制A机器生成的id_rsa.pub（公钥）到/home/eshop/.ssh/id_rsa.pub<br>    复制内容到 /home/eshop/.ssh/authorized_keys（如果没有就新建）中，命令：cat id_rsa.pub &gt;&gt; authorized_keys<br>    修改authorized_keys权限为600，命令：chmod 600 authorized_keys<br>    chmod 700 ~/.ssh/</p>
+<p>三、A机器<br>    执行<br>    ssh B机器ip</p>
+<p>注：有时还得输密码配置，情况各异。<br>可能情况参照：<a target="_blank" rel="noopener" href="https://blog.csdn.net/u010180815/article/details/78323596">https://blog.csdn.net/u010180815/article/details/78323596</a></p>
  
-    <!-- <hr class="hr-divide"> -->
-    
-</div>
- 
+    <hr class="hr-divide">
+    <div class="article-footer">
+      <a href="#top">back to top</a>
+    </div>
+  </div>
+
+  
+</section>
+  
       <!-- Footer -->
       <!-- <h1>This is the footer.ejs file</h1> -->
 
