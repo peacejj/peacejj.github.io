@@ -1,0 +1,563 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="React fiber 起因原理">
+  <meta name="author" content="peacejj">
+  <meta name="keywords" content="js">
+  
+  <title>React fiber 起因原理 - 一只皮卡丘</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"peacejj.github.io","root":"/","version":"1.8.10","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"z0tbdI48i6n76Caa0MN6garl-gzGzoHsz","app_key":"bWBLgXQjDRhEJfygVbFPm92b","server_url":"https://z0tbdi48.lc-cn-n1-shared.com"}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>一只皮卡丘</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="React fiber 起因原理">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-07-20 15:38" pubdate>
+        2022年7月20日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.5k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      29
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- LeanCloud 统计文章PV -->
+      <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="leancloud-page-views"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">React fiber 起因原理</h1>
+            
+            <div class="markdown-body">
+              <h1 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h1><p><img src="https://raw.githubusercontent.com/peacejj/static/220a3ef7bdfca90c1e2d911ec63485da3a6cf5c9/images/react/20210330131423953.gif" srcset="/img/loading.gif" lazyload alt="conv_ops"></p>
+<p>当浏览器每秒刷新的次数低于60hz人眼就会感知卡顿掉帧等情况。</p>
+<p>对于浏览器来说，在两次屏幕硬件刷新之间，浏览器正好进行一次刷新（重绘），网页也会很流畅，当然这种是理想模式。如果两次硬件刷新之间浏览器重绘多次是没意义的，只会消耗资源；如果浏览器重绘一次的时间是硬件多次刷新的时间，那么人眼将感知卡顿掉帧等， 所以浏览器对一次重绘的渲染工作需要在16ms（1000ms/60）之内完成，也就是说每一次重绘小于16ms才不会卡顿掉帧。</p>
+<p>实际上，对用户来说，不良的体验不只是视觉上表现为卡顿与掉帧，因为在浏览器中，JS 运算、页面布局和页面绘制都是运行在浏览器的主线程当中，他们之间是互斥的关系。通常这时，对于用户在输入框输入内容这个行为来说，就体现为按下了键盘按键但是页面上不实时显示输入。</p>
+<p>React 的理念<br>我们认为，React 是用 JavaScript 构建快速响应的大型 Web 应用程序的首选方式。它在 Facebook 和 Instagram 上表现优秀。 ——官网</p>
+<h1 id="React15结构："><a href="#React15结构：" class="headerlink" title="React15结构："></a>React15结构：</h1><p>我们认为，React 是用 JavaScript 构建快速响应的大型 Web 应用程序的首选方式。它在 Facebook 和 Instagram 上表现优秀。 ——官网</p>
+<h1 id="React15结构：-1"><a href="#React15结构：-1" class="headerlink" title="React15结构："></a>React15结构：</h1><p><img src="https://raw.githubusercontent.com/peacejj/static/220a3ef7bdfca90c1e2d911ec63485da3a6cf5c9/images/react/image2022-6-30_19-41-6.png" srcset="/img/loading.gif" lazyload alt="image"></p>
+<p>jsx</p>
+<figure class="highlight handlebars"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs handlebars"><span class="xml">const data = &#123;</span><br><span class="xml">    item1: &#x27;bb&#x27;,</span><br><span class="xml">    item2: &#x27;cc&#x27;</span><br><span class="xml">&#125;</span><br><span class="xml"></span><br><span class="xml">const jsx =  <span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">className</span>=<span class="hljs-string">&quot;list&quot;</span>&gt;</span></span><br><span class="xml">    <span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">className</span>=<span class="hljs-string">&quot;item&quot;</span> <span class="hljs-attr">style</span>=</span></span><span class="hljs-template-variable">&#123;&#123; <span class="hljs-name">background:</span> <span class="hljs-string">&#x27;blue&#x27;</span>, color: <span class="hljs-string">&#x27;pink&#x27;</span> &#125;&#125;</span><span class="xml"><span class="hljs-tag"> <span class="hljs-attr">onClick</span>=<span class="hljs-string">&#123;()</span> =&gt;</span> alert(2)&#125;&gt;aa<span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span></span><br><span class="xml">    <span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">className</span>=<span class="hljs-string">&quot;item&quot;</span>&gt;</span>&#123;data.item1&#125;<span class="hljs-tag">&lt;<span class="hljs-name">i</span>&gt;</span>xxx<span class="hljs-tag">&lt;/<span class="hljs-name">i</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span></span><br><span class="xml">    <span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">className</span>=<span class="hljs-string">&quot;item&quot;</span>&gt;</span>&#123;data.item2&#125;<span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span></span><br><span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span>;</span><br></code></pre></td></tr></table></figure>
+<p>render funtion</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">const</span> <span class="hljs-keyword">data</span> = &#123;<br>  item1: <span class="hljs-string">&#x27;bb&#x27;</span>,<br>  item2: <span class="hljs-string">&#x27;cc&#x27;</span><br>&#125;;<br><span class="hljs-keyword">const</span> jsx = Dong.createElement(<span class="hljs-string">&quot;ul&quot;</span>, &#123;<br>  className: <span class="hljs-string">&quot;list&quot;</span><br>&#125;, Dong.createElement(<span class="hljs-string">&quot;li&quot;</span>, &#123;<br>  className: <span class="hljs-string">&quot;item&quot;</span>,<br>  style: &#123;<br>    background: <span class="hljs-string">&#x27;blue&#x27;</span>,<br>    color: <span class="hljs-string">&#x27;pink&#x27;</span><br>  &#125;,<br>  onClick: () =&gt; alert(<span class="hljs-number">2</span>)<br>&#125;, <span class="hljs-string">&quot;aa&quot;</span>), Dong.createElement(<span class="hljs-string">&quot;li&quot;</span>, &#123;<br>  className: <span class="hljs-string">&quot;item&quot;</span><br>&#125;, <span class="hljs-keyword">data</span>.item1, Dong.createElement(<span class="hljs-string">&quot;i&quot;</span>, <span class="hljs-literal">null</span>, <span class="hljs-string">&quot;xxx&quot;</span>)), Dong.createElement(<span class="hljs-string">&quot;li&quot;</span>, &#123;<br>  className: <span class="hljs-string">&quot;item&quot;</span><br>&#125;, <span class="hljs-keyword">data</span>.item2));<br></code></pre></td></tr></table></figure>
+<p>vdom</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs json">&#123;<br>  <span class="hljs-attr">&quot;type&quot;</span>: <span class="hljs-string">&quot;ul&quot;</span>,<br>  <span class="hljs-attr">&quot;props&quot;</span>: &#123;<br>      <span class="hljs-attr">&quot;className&quot;</span>: <span class="hljs-string">&quot;list&quot;</span>,<br>      <span class="hljs-attr">&quot;children&quot;</span>: [<br>          &#123;<br>              <span class="hljs-attr">&quot;type&quot;</span>: <span class="hljs-string">&quot;li&quot;</span>,<br>              <span class="hljs-attr">&quot;props&quot;</span>: &#123;<br>                  <span class="hljs-attr">&quot;className&quot;</span>: <span class="hljs-string">&quot;item&quot;</span>,<br>                  <span class="hljs-attr">&quot;children&quot;</span>: [<br>                    <span class="hljs-string">&quot;aa&quot;</span><br>                  ]<br>              &#125;<br>          &#125;,<br>          &#123;<br>            <span class="hljs-attr">&quot;type&quot;</span>: <span class="hljs-string">&quot;li&quot;</span>,<br>            <span class="hljs-attr">&quot;props&quot;</span>: &#123;<br>                <span class="hljs-attr">&quot;className&quot;</span>: <span class="hljs-string">&quot;item&quot;</span>,<br>                <span class="hljs-attr">&quot;children&quot;</span>: [<br>                  <span class="hljs-string">&quot;bb&quot;</span><br>                ]<br>            &#125;<br>          &#125;<br>        ]<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="React-15-的架构可以分为两层"><a href="#React-15-的架构可以分为两层" class="headerlink" title="React 15 的架构可以分为两层"></a>React 15 的架构可以分为两层</h3><h4 id="1、Reconciler-协调器：负责找出变化的组件"><a href="#1、Reconciler-协调器：负责找出变化的组件" class="headerlink" title="1、Reconciler 协调器：负责找出变化的组件"></a>1、Reconciler 协调器：负责找出变化的组件</h4><p>每当有更新发生时，Reconciler会做如下工作：</p>
+<p>调用函数组件、或class组件的render方法，将返回的JSX转化为虚拟DOM<br>将虚拟DOM和上次更新时的虚拟DOM对比<br>通过对比找出本次更新中变化的虚拟DOM<br>通知Renderer将变化的虚拟DOM渲染到页面上</p>
+<h4 id="2、Renderer（渲染器）：负责将变化的组件渲染到页面"><a href="#2、Renderer（渲染器）：负责将变化的组件渲染到页面" class="headerlink" title="2、Renderer（渲染器）：负责将变化的组件渲染到页面"></a>2、Renderer（渲染器）：负责将变化的组件渲染到页面</h4><p>由于React支持跨平台，所以不同平台有不同的Renderer。我们前端最熟悉的是负责在浏览器环境渲染的Renderer —— ReactDOM。</p>
+<p>ReactDOM渲染器，浏览器环境渲染<br>ReactNative渲染器，渲染App原生组件<br>ReactTest渲染器，渲染出纯Js对象用于测试<br>ReactArt渲染器，渲染到Canvas, SVG 或 VML (IE8)</p>
+<p><strong>在每次更新发生时，Renderer接到Reconciler通知，将变化的组件渲染在当前宿主环境。</strong></p>
+<p>在每16.6ms时间内，需要完成如下工作：JS脚本执行 —– 样式布局 —– 样式绘制</p>
+<p>对于React的更新来说，递归遍历应用的所有节点由于递归执行，计算出差异，然后再更新 UI。递归是不能被打断的，所以更新一旦开始，中途就无法中断。当层级很深时，递归更新时间超过了16ms，由于JS线程和GUI线程是互斥的，所以可能会看到UI的卡顿。</p>
+<p>另一方面，递归的方式进行渲染，使用的是 JS 引擎自身的函数调用栈，当层级很多的，可能会出现爆栈（stack overflow）的错误。当然这是递归的另一个缺点，但并不是React要优化的主要原因。</p>
+<h3 id="React-16的设计思想"><a href="#React-16的设计思想" class="headerlink" title="React 16的设计思想"></a>React 16的设计思想</h3><p>React16架构可以分为三层：</p>
+<ul>
+<li>Scheduler（调度器）—— 调度任务的优先级，高优任务优先进入Reconciler</li>
+<li>Reconciler（协调器）—— 负责找出变化的组件</li>
+<li>Renderer（渲染器）—— 负责将变化的组件渲染到页面上</li>
+</ul>
+<p>相比React15，16增加了一个Scheduler（调度器），我们来了解一下。</p>
+<h4 id="Scheduler（调度器）"><a href="#Scheduler（调度器）" class="headerlink" title="Scheduler（调度器）"></a>Scheduler（调度器）</h4><p>通过上面基础知识已经了解，当JS执行时间过长，带给用户的体验就是所谓的“卡顿”。那么我们要如何解决这个问题呢？</p>
+<p>答案是：在浏览器每一帧的时间中，预留一些时间给JS线程，React利用这部分时间更新组件（可以看到，在源码中，预留的初始时间是5ms）。</p>
+<p>当预留的时间不够用时，React将线程控制权交还给浏览器使其有时间渲染UI，React则等待下一帧时间到来，继续被中断的工作。</p>
+<p>既然我们以浏览器是否有剩余时间作为任务中断的标准，那么我们需要一种机制，当浏览器有剩余时间时通知我们。所以React就实现了一个Scheduler（调度器），除了在空闲时触发回调的功能外，Scheduler还提供了多种调度优先级供任务设置。</p>
+<h4 id="Reconciler（协调器）"><a href="#Reconciler（协调器）" class="headerlink" title="Reconciler（协调器）"></a>Reconciler（协调器）</h4><p>从React15到React16，协调器（Reconciler）重构的一大目的是：将老的同步更新的架构变为异步可中断更新。</p>
+<p>异步可中断更新可以理解为：更新在执行过程中可能会被打断，可以继续执行时恢复之前执行的中间状态。</p>
+<p>有其他更高优先级任务需要先更新：屏幕外元素的渲染和更新任务的优先级应该小于响应用户输入任务。若现在进行屏幕外组件状态更新，用户又在输入，浏览器就应该先执行响应用户输入任务。<br>当前帧没有剩余时间</p>
+<h4 id="问题：同时，我们需要注意，16中的更新是可中断的，那React如何解决要是中断了，DOM渲染不完全的问题呢？"><a href="#问题：同时，我们需要注意，16中的更新是可中断的，那React如何解决要是中断了，DOM渲染不完全的问题呢？" class="headerlink" title="问题：同时，我们需要注意，16中的更新是可中断的，那React如何解决要是中断了，DOM渲染不完全的问题呢？"></a>问题：同时，我们需要注意，16中的更新是可中断的，那React如何解决要是中断了，DOM渲染不完全的问题呢？</h4><p>在React16中，Reconciler与Renderer不再是交替工作，就是说，不是一协调完一个就立刻通知Renderer去渲染【React15架构的Reconciler和Renderer是交替工作的】。而是当Scheduler将任务交给Reconciler后，Reconciler会为变化的虚拟DOM打上代表增/删/更新的标记，类似这样：</p>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs maxima">export const Placement = <span class="hljs-comment">/*             */</span> <span class="hljs-number">0b0000000000010</span>;<br>export const Update = <span class="hljs-comment">/*                */</span> <span class="hljs-number">0b0000000000100</span>;<br>export const PlacementAndUpdate = <span class="hljs-comment">/*    */</span> <span class="hljs-number">0b0000000000110</span>;<br>export const Deletion = <span class="hljs-comment">/*              */</span> <span class="hljs-number">0b0000000001000</span>;<br></code></pre></td></tr></table></figure>
+
+<p><strong>==整个Scheduler与Reconciler的工作都在内存中进行，不会更新到DOM上面。【所以即使反复中断，用户也不会看见更新不完全的DOM】只有当所有组件都完成Reconciler的工作，才会统一交给Renderer。==</strong></p>
+<p>Reconciler 内部采用了 ==<strong>Fiber</strong>== 的结构。</p>
+<h3 id="Renderer（渲染器）"><a href="#Renderer（渲染器）" class="headerlink" title="Renderer（渲染器）"></a>Renderer（渲染器）</h3><p><strong>Renderer</strong>根据<strong>Reconciler</strong>为虚拟DOM打的标记，同步执行对应的DOM操作。</p>
+<p><img src="https://raw.githubusercontent.com/peacejj/static/220a3ef7bdfca90c1e2d911ec63485da3a6cf5c9/images/react/image2022-6-30_19-41-7.jpeg" srcset="/img/loading.gif" lazyload alt="image"></p>
+<h3 id="Fiber简介"><a href="#Fiber简介" class="headerlink" title="Fiber简介"></a>Fiber简介</h3><p>Fiber在英文中的意思为“纤维化”，即细化，将任务进行细化。我们可以把一个耗时长的任务分成很多小片，每一个小片的运行时间很短，虽然总时间依然很长，但是在每个小片执行完之后，都给其他任务一个执行的机会，这样唯一的线程就不会被独占，其他任务依然有运行的机会。React中的Fiber就把整个更新过程碎片化</p>
+<p>所以要实现Fiber架构，必须要解决两个问题:</p>
+<ul>
+<li>保证任务在浏览器空闲的时候执行；</li>
+<li>将任务进行碎片化；</li>
+</ul>
+<h3 id="Fiber-Reconciler-协调器"><a href="#Fiber-Reconciler-协调器" class="headerlink" title="Fiber Reconciler 协调器"></a>Fiber Reconciler 协调器</h3><p>生成 Fiber 树，得出需要更新的节点信息。这一步是一个渐进的过程，可以被打断。</p>
+<h3 id="fiber数据格式"><a href="#fiber数据格式" class="headerlink" title="fiber数据格式"></a>fiber数据格式</h3><p>vdom：<br><img src="https://raw.githubusercontent.com/peacejj/static/220a3ef7bdfca90c1e2d911ec63485da3a6cf5c9/images/react/image2022-6-30_20-8-46.png" srcset="/img/loading.gif" lazyload alt="image"><br>fiber树：<br><img src="https://raw.githubusercontent.com/peacejj/static/220a3ef7bdfca90c1e2d911ec63485da3a6cf5c9/images/react/image2022-6-30_20-10-9.png" srcset="/img/loading.gif" lazyload alt="image"></p>
+<p>本来 vdom 里通过 children 关联父子节点，而 fiber 里面则是通过 child 关联第一个子节点，然后通过 sibling 串联起下一个，所有的节点可以 return 到父节点。</p>
+<p>这样不就把一颗 vdom 树，变成了 fiber 链表么？</p>
+<p>然后渲染 fiber 就可以了，和渲染 vdom 的时候一样。</p>
+<h3 id="fiber工作原理："><a href="#fiber工作原理：" class="headerlink" title="fiber工作原理："></a>fiber工作原理：</h3><p>Fiber节点可以保存对应的DOM节点。相应的，Fiber节点构成的Fiber树就对应DOM树。那么如何更新DOM呢？这需要用到被称为“双缓存”的技术。</p>
+<h3 id="双缓存是什么"><a href="#双缓存是什么" class="headerlink" title="双缓存是什么"></a>双缓存是什么</h3><p>当我们用canvas绘制动画，每一帧绘制前都会调用ctx.clearRect清除上一帧的画面。</p>
+<p>如果当前帧画面计算量比较大，导致清除上一帧画面到绘制当前帧画面之间有较长间隙，就会出现白屏。</p>
+<p>为了解决这个问题，我们可以在内存中绘制当前帧动画，绘制完毕后直接用当前帧替换上一帧画面，由于省去了两帧替换间的计算时间，不会出现从白屏到出现画面的闪烁情况。</p>
+<p>这种在内存中构建并直接替换的技术叫做双缓存。</p>
+<p>React使用“双缓存”来完成Fiber树的构建与替换——对应着DOM树的创建与更新。</p>
+<h3 id="双缓存Fiber树"><a href="#双缓存Fiber树" class="headerlink" title="双缓存Fiber树"></a>双缓存Fiber树</h3><p>即在更新时，react存储两个fiber数据结构，如下图：<br><img src="https://raw.githubusercontent.com/peacejj/static/220a3ef7bdfca90c1e2d911ec63485da3a6cf5c9/images/react/mark_3024_0_0_0.png" srcset="/img/loading.gif" lazyload alt="image"></p>
+<p>上图中，rootFiberNode是应用挂在的节点，左右两侧分别是两棵树。current指向的fiber是渲染在页面中的fiber(即出现在屏幕中的视图)，我们称它未current fiber。左侧是正在内存中构建的Fiber树称为workInProgress Fiber。current fiber和workInProgress fiber通过alternate属性连接。</p>
+<p>当workInProgress Fiber树构建完成交给Renderer渲染在页面上后，应用根节点的current指针指向workInProgress Fiber树，此时workInProgress Fiber树就变为current Fiber树。</p>
+<p>每次状态更新都会产生新的workInProgress Fiber树，通过current与workInProgress的替换，完成DOM更新。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%8E%9F%E7%90%86%E7%9F%A5%E8%AF%86/">原理知识</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/React-fiber/">React fiber</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/05/11/async-schedule/">
+                        <span class="hidden-mobile">异步调度任务，同一时间限制输出。</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+
+  <script defer src="/js/leancloud.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
