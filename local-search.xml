@@ -1,0 +1,742 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>异步调度任务，同一时间限制输出。</title>
+    <link href="/project/2021/05/11/async-schedule/"/>
+    <url>/project/2021/05/11/async-schedule/</url>
+    
+    <content type="html"><![CDATA[<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Scheduler</span> </span>&#123;<br>    list = [];<br><br>    count = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-function"><span class="hljs-title">constructor</span>(<span class="hljs-params">num</span>)</span> &#123;<br>        <span class="hljs-built_in">this</span>.num = num;<br>    &#125;<br><br>    <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">add</span>(<span class="hljs-params">fn</span>)</span> &#123;<span class="hljs-comment">//fn是一个异步函数，返回</span><br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.count &gt;= <span class="hljs-built_in">this</span>.num) &#123;<br>            <span class="hljs-keyword">await</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve</span>) =&gt;</span> &#123;<br>                <span class="hljs-built_in">this</span>.list.push(resolve);<br>            &#125;);<br>        &#125;<br><br>        <span class="hljs-built_in">this</span>.count++;<br><br>        <span class="hljs-keyword">let</span> res = <span class="hljs-keyword">await</span> fn();<br><br>        <span class="hljs-built_in">this</span>.count--;<br><br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.list.length &gt; <span class="hljs-number">0</span>) &#123;<br>            <span class="hljs-built_in">this</span>.list.shift()();<br>        &#125;<br><br>        <span class="hljs-keyword">return</span> res;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">//以下是调用执行</span><br><span class="hljs-keyword">const</span> schedule = <span class="hljs-keyword">new</span> Scheduler(<span class="hljs-number">2</span>);<span class="hljs-comment">//最多同一时间让它执行3个异步函数</span><br><br><span class="hljs-keyword">const</span> asyncFacotory = <span class="hljs-function">(<span class="hljs-params">n, time</span>) =&gt;</span> &#123;<br><br>    <span class="hljs-keyword">return</span> <span class="hljs-function">() =&gt;</span> &#123;<br><br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve</span>) =&gt;</span> &#123;<br><br>            <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>                resolve(n);<br>            &#125;, time)<br><br>        &#125;)<br><br>    &#125;<br><br>&#125;<br><br>schedule.add(asyncFacotory(<span class="hljs-number">1</span>, <span class="hljs-number">2000</span>)).then(<span class="hljs-function">(<span class="hljs-params">n</span>) =&gt;</span> &#123;<br>    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`异步任务:<span class="hljs-subst">$&#123;n&#125;</span>`</span>)<br>&#125;);<br>schedule.add(asyncFacotory(<span class="hljs-number">2</span>, <span class="hljs-number">2000</span>)).then(<span class="hljs-function">(<span class="hljs-params">n</span>) =&gt;</span> &#123;<br>    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`异步任务:<span class="hljs-subst">$&#123;n&#125;</span>`</span>)<br>&#125;);<br>schedule.add(asyncFacotory(<span class="hljs-number">3</span>, <span class="hljs-number">2000</span>)).then(<span class="hljs-function">(<span class="hljs-params">n</span>) =&gt;</span> &#123;<br>    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`异步任务:<span class="hljs-subst">$&#123;n&#125;</span>`</span>)<br>&#125;);<br>schedule.add(asyncFacotory(<span class="hljs-number">4</span>, <span class="hljs-number">2000</span>)).then(<span class="hljs-function">(<span class="hljs-params">n</span>) =&gt;</span> &#123;<br>    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`异步任务:<span class="hljs-subst">$&#123;n&#125;</span>`</span>)<br>&#125;);<br>schedule.add(asyncFacotory(<span class="hljs-number">5</span>, <span class="hljs-number">2000</span>)).then(<span class="hljs-function">(<span class="hljs-params">n</span>) =&gt;</span> &#123;<br>    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`异步任务:<span class="hljs-subst">$&#123;n&#125;</span>`</span>)<br>&#125;);<br>schedule.add(asyncFacotory(<span class="hljs-number">6</span>, <span class="hljs-number">2000</span>)).then(<span class="hljs-function">(<span class="hljs-params">n</span>) =&gt;</span> &#123;<br>    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`异步任务:<span class="hljs-subst">$&#123;n&#125;</span>`</span>)<br>&#125;);<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>项目相关</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>interview</tag>
+      
+      <tag>js</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>weakSet和weakMap</title>
+    <link href="/project/2021/04/23/weakSet/"/>
+    <url>/project/2021/04/23/weakSet/</url>
+    
+    <content type="html"><![CDATA[<h3 id="weakSet-和-Set-对象的区别有两点"><a href="#weakSet-和-Set-对象的区别有两点" class="headerlink" title="weakSet 和 Set 对象的区别有两点:"></a>weakSet 和 Set 对象的区别有两点:</h3><ol><li>WeakSet 对象中只能存放对象引用, 不能存放值, 而 Set 对象都可以.</li><li>WeakSet 对象中存储的对象值都是被弱引用的, 如果没有其他的变量或属性引用这个对象值, 则这个对象值会被当成垃圾回收掉. 正因为这样, WeakSet 对象是无法被枚举的, 没有办法拿到它包含的所有元素</li></ol><blockquote><p>WeakSet 不能被遍历，也没有size属性。</p></blockquote>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>es6</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>generator</title>
+    <link href="/project/2021/04/11/generator/"/>
+    <url>/project/2021/04/11/generator/</url>
+    
+    <content type="html"><![CDATA[<p>Generator 函数<br>是es6的新特性，主要配合<code>yield</code>进行<strong>函数暂停执行</strong>。</p><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> * <span class="hljs-title">gen</span><span class="hljs-params">()</span></span>&#123;<br>    console.<span class="hljs-built_in">log</span>(<span class="hljs-string">&#x27;start&#x27;</span>)<br>    <span class="hljs-built_in">yield</span> <span class="hljs-string">&#x27;hello world&#x27;</span><br>    console.<span class="hljs-built_in">log</span>(<span class="hljs-string">&#x27;middle&#x27;</span>)<br>    <span class="hljs-built_in">yield</span> <span class="hljs-string">&#x27;!!!&#x27;</span><br>    console.<span class="hljs-built_in">log</span>(<span class="hljs-string">&#x27;end&#x27;</span>)<br>&#125;<br><br>let g = gen();<br>g.<span class="hljs-built_in">next</span>();//&#123;value: <span class="hljs-string">&#x27;hello world&#x27;</span>, done: <span class="hljs-literal">false</span>&#125;<br>g.<span class="hljs-built_in">next</span>();//&#123;value: <span class="hljs-string">&#x27;!!!&#x27;</span>, done: <span class="hljs-literal">false</span>&#125;<br>g.<span class="hljs-built_in">next</span>();//&#123;value: undefined, done: <span class="hljs-literal">true</span>&#125;<br><br><br>//注意，最后一个输出undefined，如果想有值，在最后加<span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;over&#x27;</span>即可。<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>es6</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>DOM 解析和渲染</title>
+    <link href="/project/2021/04/11/dom-parese/"/>
+    <url>/project/2021/04/11/dom-parese/</url>
+    
+    <content type="html"><![CDATA[<h3 id="一、总结："><a href="#一、总结：" class="headerlink" title="一、总结："></a>一、总结：</h3><ol><li>css不会阻止dom解析，但会阻止dom渲染</li><li>script标签要等前面外联的css下载完成后，再去执行。如果link的css文件太大，则没必要等待。</li><li>js阻塞DOM解析和渲染，但浏览器会”偷看”DOM，预先下载相关资源</li></ol><h3 id="二、阶段含义"><a href="#二、阶段含义" class="headerlink" title="二、阶段含义"></a>二、阶段含义</h3><table><thead><tr><th>阶段</th><th>含义</th></tr></thead><tbody><tr><td>Send Request</td><td>发送http请求</td></tr><tr><td>Receive Response</td><td>接收http返回数据</td></tr><tr><td>Parse HTML</td><td>解析html</td></tr><tr><td>Parse Stylesheet</td><td>解析css文件</td></tr><tr><td>Evaluate Script</td><td>执行js脚本</td></tr><tr><td>domContentLoadedEventEnd</td><td>dom创建完成</td></tr><tr><td>Paint</td><td>渲染页面</td></tr><tr><td>loadEventEnd</td><td>页面加载完成</td></tr></tbody></table><h3 id="三、常见问题"><a href="#三、常见问题" class="headerlink" title="三、常见问题"></a>三、常见问题</h3><h5 id="1、为何-lt-script-gt-与-lt-link-gt-同时在头部的话，-lt-script-gt-在上可能会更好？"><a href="#1、为何-lt-script-gt-与-lt-link-gt-同时在头部的话，-lt-script-gt-在上可能会更好？" class="headerlink" title="1、为何&lt;script&gt;与&lt;link&gt;同时在头部的话，&lt;script&gt;在上可能会更好？"></a>1、为何<code>&lt;script&gt;</code>与<code>&lt;link&gt;</code>同时在头部的话，<code>&lt;script&gt;</code>在上可能会更好？</h5><p>script标签要等前面外联的css下载完成后，再去执行。如果link的css文件太大，则没必要等待。</p><h5 id="2、-lt-script-gt-最好放底部，-lt-link-gt-最好放头部。"><a href="#2、-lt-script-gt-最好放底部，-lt-link-gt-最好放头部。" class="headerlink" title="2、&lt;script&gt;最好放底部，&lt;link&gt;最好放头部。"></a>2、<code>&lt;script&gt;</code>最好放底部，<code>&lt;link&gt;</code>最好放头部。</h5><h5 id="3、js会阻塞DOM解析和渲染，如何优化？"><a href="#3、js会阻塞DOM解析和渲染，如何优化？" class="headerlink" title="3、js会阻塞DOM解析和渲染，如何优化？"></a>3、js会阻塞DOM解析和渲染，如何优化？</h5><ol><li>如果js文件太大，同时没必要阻塞dom解析的话，可以延后加载，设置defer属性。</li><li>如果js执行时间太长，可以用异步方法。当</li></ol><h5 id="4、html的解析流程是什么"><a href="#4、html的解析流程是什么" class="headerlink" title="4、html的解析流程是什么"></a>4、html的解析流程是什么</h5><ol><li>解析HTML结构。</li><li>并行加载脚本、样式表文件、img等外部资源</li><li>如有js文件未下载，则等待下载完成（js文件前如有css文件，则需要先等css文件下载完成）</li><li>脚本下载后立即执行，然后从当前解析处开始解析</li><li>DOM树构建完成。//DOMContentLoaded</li><li>解析外部css文件，img图片等资源</li><li>paint，渲染页面</li><li>页面加载完毕。//load</li></ol>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>html</tag>
+      
+      <tag>dom</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>重排、重绘</title>
+    <link href="/project/2021/04/10/backflow-and-redraw/"/>
+    <url>/project/2021/04/10/backflow-and-redraw/</url>
+    
+    <content type="html"><![CDATA[<h2 id="重排"><a href="#重排" class="headerlink" title="重排"></a>重排</h2><p>概念：页面中元素样式的改<strong>变影响它在文档流中的位置</strong></p><h6 id="引起重排的操作"><a href="#引起重排的操作" class="headerlink" title="引起重排的操作"></a>引起重排的操作</h6><ul><li>页面首次渲染</li><li>浏览器窗口大小发生变化</li><li>元素尺寸或位置发生变化</li><li>元素内容变化（文字数量或图片大小等等）</li><li>元素字体大小变化</li><li>添加或删除了可见的dom元素</li><li>激活css伪类</li></ul><h2 id="重绘"><a href="#重绘" class="headerlink" title="重绘"></a>重绘</h2><p>概念：当页面中元素样式的改变并不影响它在文档流中的位置时，例如更改了字体颜色,浏览器会将新样式赋予给元素并重新绘制的过程称。</p><h6 id="引起重绘的操作"><a href="#引起重绘的操作" class="headerlink" title="引起重绘的操作"></a>引起重绘的操作</h6><ul><li>color</li><li>background</li><li>visibility</li></ul><h2 id="减少重绘-重排"><a href="#减少重绘-重排" class="headerlink" title="减少重绘/重排"></a>减少重绘/重排</h2><ul><li>减少通过JavaScript代码修改元素样式，尽量使用修改class名方式操作样式或动画；</li><li>动画尽量使用在绝对定位或固定定位的元素上；</li><li>用事件委托来减少事件处理器的数量。</li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>css</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>happyPack多线程打包</title>
+    <link href="/project/2021/03/25/happyPack/"/>
+    <url>/project/2021/03/25/happyPack/</url>
+    
+    <content type="html"><![CDATA[<h5 id="1、安装happypack"><a href="#1、安装happypack" class="headerlink" title="1、安装happypack"></a>1、安装happypack</h5><figure class="highlight coffeescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coffeescript"><span class="hljs-built_in">npm</span> i happypack<br></code></pre></td></tr></table></figure><h5 id="2、实现js和css的多线程打包"><a href="#2、实现js和css的多线程打包" class="headerlink" title="2、实现js和css的多线程打包"></a>2、实现js和css的多线程打包</h5><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs awk">let HappyPack = require(<span class="hljs-string">&#x27;happypack&#x27;</span>);<br><br>module.exports = &#123;<br>    ...<br>    module:&#123;<br>        rules:[<br>            &#123;<br>                test:<span class="hljs-regexp">/\.js$/</span>,<br>                use:<span class="hljs-string">&#x27;HappyPack/loader?id=js&#x27;</span><span class="hljs-regexp">//</span>这个id=js就代表这是打包js的<br>            &#125;,<br>            &#123;<br>                test:<span class="hljs-regexp">/\.css$/</span>,<br>                use:<span class="hljs-string">&#x27;HappyPack/loader?id=css&#x27;</span><span class="hljs-regexp">//</span>这个id=css就代表这是打包css的<br>            &#125;<br>        ]<br>    &#125;,<br>    plugins:[<br>        new HappyPack(&#123;这个id:js就代表这是打包js的<br>            id:<span class="hljs-string">&#x27;css&#x27;</span>,<span class="hljs-regexp">//</span><br>            use:[<span class="hljs-string">&#x27;style-loader&#x27;</span>,<span class="hljs-string">&#x27;css-loader&#x27;</span>]<br>        &#125;),<br>        new HappyPack(&#123;这个id:js就代表这是打包js的<br>            id:<span class="hljs-string">&#x27;js&#x27;</span>,<span class="hljs-regexp">//</span><br>            use:[&#123;<span class="hljs-regexp">//u</span>se是一个数组，这里写原先在rules的use里的loader配置<br>                loader:<span class="hljs-string">&#x27;babel-loader&#x27;</span>,<br>                options:&#123;<br>                    presets:[<br>                        <span class="hljs-string">&#x27;@babel/presets-env&#x27;</span>,<br>                        <span class="hljs-string">&#x27;@babel/presets-react&#x27;</span><br>                    ]<br>                &#125;<br>            &#125;]<br>        &#125;)<br>    ]<br>&#125;<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>webpack</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>offsetWidth、clientWidth、scrollWidth、style.width区别</title>
+    <link href="/project/2021/03/21/css-width/"/>
+    <url>/project/2021/03/21/css-width/</url>
+    
+    <content type="html"><![CDATA[<ol><li>offsetWidth: contentWidth + padding + border</li><li>clientWidth: contentWidth + padding</li><li>scrollWidth: contentWidth + padding + 溢出区域的内容（不包含border）</li><li>style.width: 需定义在html上，如果在css上，仍然为空，且获取后有单位。</li></ol>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>css</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>dns基于tcp还是udp</title>
+    <link href="/project/2021/03/11/dns/"/>
+    <url>/project/2021/03/11/dns/</url>
+    
+    <content type="html"><![CDATA[<h3 id="DNS占用53号端口，同时使用TCP和UDP协议。"><a href="#DNS占用53号端口，同时使用TCP和UDP协议。" class="headerlink" title="DNS占用53号端口，同时使用TCP和UDP协议。"></a><strong><code>DNS占用53号端口，同时使用TCP和UDP协议。</code></strong></h3><hr><h3 id="1、那么DNS在什么情况下使用这两种协议？"><a href="#1、那么DNS在什么情况下使用这两种协议？" class="headerlink" title="1、那么DNS在什么情况下使用这两种协议？"></a>1、那么DNS在什么情况下使用这两种协议？</h3><p>DNS在<code>区域传输</code>的时候使用TCP协议，其他时候使用UDP协议。</p><h3 id="2、区域传送时使用TCP，主要有一下两点考虑："><a href="#2、区域传送时使用TCP，主要有一下两点考虑：" class="headerlink" title="2、区域传送时使用TCP，主要有一下两点考虑："></a>2、区域传送时使用TCP，主要有一下两点考虑：</h3><ol><li>辅域名服务器会定时（一般时3小时）向主域名服务器进行查询以便了解数据是否有变动。如有变动，则会执行一次区域传送，进行数据同步。区域传送将使用TCP而不是UDP，因为数据同步传送的数据量比一个请求和应答的数据量要多得多。 </li><li>TCP是一种可靠的连接，保证了数据的准确性。 </li></ol><h3 id="3、域名解析时使用UDP协议："><a href="#3、域名解析时使用UDP协议：" class="headerlink" title="3、域名解析时使用UDP协议："></a>3、域名解析时使用UDP协议：</h3><p>客户端向DNS服务器查询域名，一般返回的内容都不超过512字节，用UDP传输即可。不用经过TCP三次握手，这样DNS服务器负载更低，响应更快。虽然从理论上说，客户端也可以指定向DNS服务器查询的时候使用TCP，但事实上，很多DNS服务器进行配置的时候，仅支持UDP查询包。</p><h3 id="4、DNS请求流程"><a href="#4、DNS请求流程" class="headerlink" title="4、DNS请求流程"></a>4、DNS请求流程</h3><p>三种类型的 DNS 服务器，根 DNS 服务器，顶级域 DNS 服务器和权威 DNS 服务器。</p><p>浏览器本地—》系统本地host文件—》路由器缓存—》运营商DNS服务器-》</p><p><img src="/images/net/dns.png" alt="image"></p><ol><li>首先浏览器会检查浏览器自身的DNS缓存中，是否有域名对应的DNS缓存(chrome缓存1分钟，大概有1000条缓存)，没有的话进入第二步，否则解析完成</li><li>接下来去查看系统的hosts文件(C:\Windows\System32\drivers\etc)是否有域名对应的IP地址，如果找到则停止解析，否则进入第三步</li><li>浏览器发起DNS系统调用，向本地配置的首选DNS服务器发起域名解析请求(通过UDP协议，向DNS的53端口发起请求)</li><li>首先请求会在运营商的**DNS服务器(本地服务器)**上进行请求，如果找到对应的条目，且没有过期，则解析成功，否则进入第五步</li><li>运营商的DNS服务器，根据解析请求，迭代查询，首先找到根域名服务器的IP地址(这个DNS服务器内置13台根域DNS的IP地址)，然后找到根域的DNS地址，发送请求</li><li>根域服务器收到请求后，根据域名，返回对应的顶级域的服务器ip地址，并返回给运营商DNS服务器</li><li>运营商DNS服务器接收到根域名服务器传回来的顶级域名服务器IP地址后，向顶级域名服务器发送请求</li><li>顶级域名服务器接收到请求后，返回该域名对应的权威域名服务器的ip地址，并返回给运行商DNS服务器。</li><li>运营商DNS服务器获得权威域名服务器的响应信息后，返回给请求的主机，DNS解析完成。</li><li>DNS主要是通过UDP通信，报文结构主要分为头部Header、查询部分Question、应答部分Answer/Authority/Addition。</li></ol>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>网络</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>前端构建工具原理分析</title>
+    <link href="/project/2021/03/07/build-tools/"/>
+    <url>/project/2021/03/07/build-tools/</url>
+    
+    <content type="html"><![CDATA[<p><a href="/file/goujian.pdf">前端构建工具原理分析.pdf</a></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>原理知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>webpack</tag>
+      
+      <tag>前端构建</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>css3动画</title>
+    <link href="/project/2021/01/11/css-animation/"/>
+    <url>/project/2021/01/11/css-animation/</url>
+    
+    <content type="html"><![CDATA[<h2 id="一、transition-（动画过渡）：一定时间之内，一组css属性变换到另一组属性的动画展示过程。"><a href="#一、transition-（动画过渡）：一定时间之内，一组css属性变换到另一组属性的动画展示过程。" class="headerlink" title="一、transition （动画过渡）：一定时间之内，一组css属性变换到另一组属性的动画展示过程。"></a>一、transition （动画过渡）：一定时间之内，一组css属性变换到另一组属性的动画展示过程。</h2><h6 id="属性是一个简写属性，用于设置四个过渡属性："><a href="#属性是一个简写属性，用于设置四个过渡属性：" class="headerlink" title="属性是一个简写属性，用于设置四个过渡属性："></a>属性是一个简写属性，用于设置四个过渡属性：</h6><ul><li>transition-property  - css属性</li><li>transition-duration   - 动画执行时长 如果为0 动画不执行</li><li>transition-timing-function    - 动画执行方式 默认ease</li><li>transition-delay   - 动画延迟执行时间 默认0</li></ul><p>一般来说，将transition属性应用到最初的样式里，而不是放在结束的样式里，即定义动画开始之前的元素外观的样式。</p><p>只需要给元素设置一次transition，浏览器就会负责以动画展示从一个样式到另一个样式，再返回最初样式的变化过程。它的特性：</p><ol><li>需要一个事件来触发，比如hover，所以没法在网页加载时自动触发。</li><li>是一次性的，不能重复发生，除非一再触发。</li><li>只能定义开始状态和结束状态，不能定义中间状态，也就是说只有两个状态。</li><li>一条transition规则，只能定义一个属性的变化，不能涉及多个属性。</li></ol><p>为了突破这些限制，animation出现了。</p><h2 id="二、animation-（动画属性）：animation可以通过keyframes显式控制当前帧的属性值"><a href="#二、animation-（动画属性）：animation可以通过keyframes显式控制当前帧的属性值" class="headerlink" title="二、animation （动画属性）：animation可以通过keyframes显式控制当前帧的属性值"></a>二、animation （动画属性）：animation可以通过keyframes显式控制当前帧的属性值</h2><h6 id="属性是一个简写属性，用于设置六个动画属性："><a href="#属性是一个简写属性，用于设置六个动画属性：" class="headerlink" title="属性是一个简写属性，用于设置六个动画属性："></a>属性是一个简写属性，用于设置六个动画属性：</h6><ul><li>animation-name  规定需要绑定到选择器的 keyframe 名称。</li><li>animation-duration</li><li>animation-timing-function</li><li>animation-delay  </li><li>animation-iteration-count   - 规定动画应该播放的次数。  n | infinite</li><li>animation-direction   - 规定是否应该轮流反向播放动画。 normal | alternate;</li></ul><p>一般来说，会结合animation-play-state使用</p><h4 id="规定动画正在运行还是暂停"><a href="#规定动画正在运行还是暂停" class="headerlink" title="规定动画正在运行还是暂停"></a>规定动画正在运行还是暂停</h4><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-attribute">animation-play-state</span>: paused|running;<br></code></pre></td></tr></table></figure><h2 id="三、transform："><a href="#三、transform：" class="headerlink" title="三、transform："></a>三、transform：</h2><h6 id="向元素应用-2D-或-3D-转换。该属性允许我们对元素进行旋转、缩放、移动或倾斜。"><a href="#向元素应用-2D-或-3D-转换。该属性允许我们对元素进行旋转、缩放、移动或倾斜。" class="headerlink" title="向元素应用 2D 或 3D 转换。该属性允许我们对元素进行旋转、缩放、移动或倾斜。"></a>向元素应用 2D 或 3D 转换。该属性允许我们对元素进行旋转、缩放、移动或倾斜。</h6><figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs maxima"><span class="hljs-built_in">transform</span>: none|<span class="hljs-built_in">transform</span>-<span class="hljs-built_in">functions</span>;<br><br><span class="hljs-built_in">transform</span>-<span class="hljs-built_in">functions</span>:<br>    <span class="hljs-built_in">matrix</span>():定义矩阵变换。<br>    <span class="hljs-built_in">translate</span>():移动元素对象。<br>    <span class="hljs-built_in">scale</span>():缩放元素对象。<br>    rotate():旋转元素对象。<br>    skew():倾斜元素对象。<br><br><br><span class="hljs-built_in">translate</span>(a, b)：是<span class="hljs-built_in">transform</span>中的一个属性，用官方的话说叫做2D转移，其实就是平面上的x轴和y轴移动，具体使用：<br><span class="hljs-built_in">transform</span>: <span class="hljs-built_in">translate</span>(x,y)<br><span class="hljs-built_in">transform</span>: translateX(x)<br><span class="hljs-built_in">transform</span>: translateY(y)<br></code></pre></td></tr></table></figure><h2 id="四、渐变："><a href="#四、渐变：" class="headerlink" title="四、渐变："></a>四、渐变：</h2><figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs processing">linear-gradient(方向，颜色<span class="hljs-number">1</span>，颜色<span class="hljs-number">2</span>，...)<br><br>实例：<br><span class="hljs-built_in">background</span>: linear-gradient(<span class="hljs-number">90</span>deg,<span class="hljs-built_in">red</span> <span class="hljs-number">0</span>px,<span class="hljs-built_in">green</span> <span class="hljs-number">25</span>%,<span class="hljs-built_in">blue</span> <span class="hljs-number">50</span>%, purple <span class="hljs-number">75</span>%);<br><br><span class="hljs-built_in">background</span>: linear-gradient(<span class="hljs-built_in">red</span>,<span class="hljs-built_in">green</span>,<span class="hljs-built_in">blue</span>);<br><br><span class="hljs-built_in">background</span>: linear-gradient(<span class="hljs-built_in">red</span> <span class="hljs-number">0</span>px,<span class="hljs-built_in">green</span> <span class="hljs-number">25</span>%,<span class="hljs-built_in">blue</span> <span class="hljs-number">50</span>%, purple <span class="hljs-number">75</span>%);<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>css</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>事件发布订阅</title>
+    <link href="/project/2021/01/11/subscribe/"/>
+    <url>/project/2021/01/11/subscribe/</url>
+    
+    <content type="html"><![CDATA[<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs processing">class Events &#123;<br>    constructor() &#123;<br>        <span class="hljs-keyword">this</span>.events = <span class="hljs-keyword">new</span> Map();<br>    &#125;<br><br>    addEvent(<span class="hljs-built_in">key</span>, fn, isOnce, ...args) &#123;<br>        <span class="hljs-keyword">const</span> value = <span class="hljs-keyword">this</span>.events.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">key</span>) ? <span class="hljs-keyword">this</span>.events.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">key</span>) : <span class="hljs-keyword">this</span>.events.<span class="hljs-built_in">set</span>(<span class="hljs-built_in">key</span>, <span class="hljs-keyword">new</span> Map()).<span class="hljs-built_in">get</span>(<span class="hljs-built_in">key</span>)<br>        value.<span class="hljs-built_in">set</span>(fn, (...args1) =&gt; &#123;<br>            fn(...args, ...args1)<br>            isOnce &amp;&amp; <span class="hljs-keyword">this</span>.off(<span class="hljs-built_in">key</span>, fn)<br>        &#125;)<br>    &#125;<br><br>    on(<span class="hljs-built_in">key</span>, fn, ...args) &#123;<br>        <span class="hljs-keyword">if</span> (!fn) &#123;<br>            console.error(`没有传入回调函数`);<br>            <span class="hljs-keyword">return</span><br>        &#125;<br>        <span class="hljs-keyword">this</span>.addEvent(<span class="hljs-built_in">key</span>, fn, <span class="hljs-keyword">false</span>, ...args)<br><br>        console.<span class="hljs-built_in">log</span>(<span class="hljs-keyword">this</span>.events);<br>    &#125;<br><br>    fire(<span class="hljs-built_in">key</span>, ...args) &#123;<br>        <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.events.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">key</span>)) &#123;<br>            console.warn(`没有 $&#123;<span class="hljs-built_in">key</span>&#125; 事件`);<br>            <span class="hljs-keyword">return</span>;<br>        &#125;<br>        <span class="hljs-keyword">for</span> (let [, cb] of <span class="hljs-keyword">this</span>.events.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">key</span>).entries()) &#123;<br>            cb(...args);<br>        &#125;<br>    &#125;<br><br>    off(<span class="hljs-built_in">key</span>, fn) &#123;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.events.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">key</span>)) &#123;<br>            <span class="hljs-keyword">this</span>.events.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">key</span>).delete(fn);<br>        &#125;<br>    &#125;<br><br>    once(<span class="hljs-built_in">key</span>, fn, ...args) &#123;<br>        <span class="hljs-keyword">this</span>.addEvent(<span class="hljs-built_in">key</span>, fn, <span class="hljs-keyword">true</span>, ...args)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><p>思考：必须先订阅再发布吗？如何解决？</p><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><code class="hljs javascript">解决：我们可以加一个cache，保存历史新发布的消息记录，等新用户订阅时，直接执行。<br><span class="hljs-attr">list</span> :&#123;<span class="hljs-attr">event</span>:[client1,client2]&#125;<br>cache ：&#123;<span class="hljs-attr">event</span>:[params1,params2,...]&#125;<br><br><span class="hljs-keyword">var</span> Event = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;<br>  <span class="hljs-built_in">this</span>.list = &#123;&#125;<br>  <span class="hljs-built_in">this</span>.cache = &#123;&#125;<br>&#125;<br><br>Event.prototype.add = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">area, client</span>) </span>&#123;<br>  <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">this</span>.list[area]) <span class="hljs-built_in">this</span>.list[area] = []<br>  <span class="hljs-built_in">this</span>.list[area].push(client)<br>  <span class="hljs-built_in">this</span>.cache[area].forEach(<span class="hljs-function"><span class="hljs-params">price</span> =&gt;</span> &#123;<br>    client.listen(area, price)<br>  &#125;)<br>&#125;<br><br>Event.prototype.once = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">area, callback</span>) </span>&#123;<br>    <span class="hljs-keyword">let</span> wrapFanc = <span class="hljs-function">(<span class="hljs-params">...args</span>) =&gt;</span> &#123;<span class="hljs-comment">//创建一个wrapFanc函数实现单次调用后停止监听</span><br>        callback.apply(<span class="hljs-built_in">this</span>.args)<span class="hljs-comment">//执行wrapFanc</span><br>        <span class="hljs-built_in">this</span>.off(event,wrapFanc)<span class="hljs-comment">//后停止监听事件</span><br>   &#125;<br><br>    <span class="hljs-built_in">this</span>.add(area,wrapFanc)<br><br>  &#125;<br>  <br>Event.prototype.remove = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">area, client</span>) </span>&#123;<br>  <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">this</span>.list[area]) <span class="hljs-keyword">return</span><br>  <span class="hljs-keyword">var</span> index = <span class="hljs-built_in">this</span>.list[area].findIndex(<span class="hljs-function"><span class="hljs-params">item</span> =&gt;</span> item === client)<br>  <span class="hljs-built_in">this</span>.list[area].splice(index, <span class="hljs-number">1</span>)<br>&#125;<br><br><br>Event.prototype.triggle = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">area, price</span>) </span>&#123;<br>  <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">this</span>.cache[area]) <span class="hljs-built_in">this</span>.cache[area] = []<br>  <span class="hljs-built_in">this</span>.cache[area].push(price)<br><br>  <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">this</span>.list[area]) <span class="hljs-keyword">return</span><br>  <span class="hljs-built_in">this</span>.list[area].forEach(<span class="hljs-function"><span class="hljs-params">client</span> =&gt;</span> &#123;<br>    client.listen(area, price)<br>  &#125;)<br>&#125;<br><br><span class="hljs-keyword">var</span> Client = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) </span>&#123;<br>  <span class="hljs-built_in">this</span>.name = name<br>&#125;<br><br>Client.prototype.listen = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">area, price</span>) </span>&#123;<br>  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`<span class="hljs-subst">$&#123;<span class="hljs-built_in">this</span>.name&#125;</span>收到<span class="hljs-subst">$&#123;area&#125;</span>平的房源报价<span class="hljs-subst">$&#123;price&#125;</span>`</span>)<br>&#125;<br><br><br><span class="hljs-keyword">var</span> client1 = <span class="hljs-keyword">new</span> Client(<span class="hljs-string">&#x27;client1&#x27;</span>)<br><span class="hljs-keyword">var</span> client2 = <span class="hljs-keyword">new</span> Client(<span class="hljs-string">&#x27;client2&#x27;</span>)<br><br><br><span class="hljs-keyword">var</span> event = <span class="hljs-keyword">new</span> Event()<br><span class="hljs-comment">// event.add(&#x27;80平&#x27;, client1)</span><br><span class="hljs-comment">// event.add(&#x27;100平&#x27;, client1)</span><br><span class="hljs-comment">// event.add(&#x27;80平&#x27;, client2)</span><br><span class="hljs-comment">// event.add(&#x27;300平&#x27;, client1)</span><br><span class="hljs-comment">// event.remove(&#x27;300平&#x27;, client1)</span><br><br>event.triggle(<span class="hljs-string">&#x27;80平&#x27;</span>, <span class="hljs-number">200</span>) <span class="hljs-comment">// client1收到80平平的房源报价200 client2收到80平平的房源报价200</span><br>event.triggle(<span class="hljs-string">&#x27;100平&#x27;</span>, <span class="hljs-number">500</span>) <span class="hljs-comment">// client1收到100平平的房源报价500</span><br>event.triggle(<span class="hljs-string">&#x27;200平&#x27;</span>, <span class="hljs-number">1000</span>) <span class="hljs-comment">//</span><br><br><br><span class="hljs-keyword">var</span> client3 = <span class="hljs-keyword">new</span> Client(<span class="hljs-string">&#x27;client3&#x27;</span>)<br>event.add(<span class="hljs-string">&#x27;80平&#x27;</span>, client3)<br>event.add(<span class="hljs-string">&#x27;100平&#x27;</span>, client3)<br><br>event.add(<span class="hljs-string">&#x27;80平&#x27;</span>, client1)<br>event.add(<span class="hljs-string">&#x27;100平&#x27;</span>, client1)<br><br>event.triggle(<span class="hljs-string">&#x27;80平&#x27;</span>, <span class="hljs-number">1000</span>) <br><br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>项目相关</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>interview</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>jwt token</title>
+    <link href="/project/2020/12/09/jwt/"/>
+    <url>/project/2020/12/09/jwt/</url>
+    
+    <content type="html"><![CDATA[<h5 id="jwt-token主要包含以下三个内容："><a href="#jwt-token主要包含以下三个内容：" class="headerlink" title="jwt token主要包含以下三个内容："></a>jwt token主要包含以下三个内容：</h5><ul><li>头部 Header      Base64URL加密</li><li>载荷 Payload     Base64URL加密</li><li>签名 Signature    </li></ul><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">&#123;Header 头部&#125;.&#123;Payload 负载&#125;.&#123;Signature 签名&#125;<br><br>签名计算方法：<br><span class="hljs-constructor">HMACSHA256(<span class="hljs-params">base64UrlEncode</span>(<span class="hljs-params">header</span>)</span> + <span class="hljs-string">&quot;.&quot;</span> + base64<span class="hljs-constructor">UrlEncode(<span class="hljs-params">payload</span>)</span>, secret)<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>token</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>linux命令—老记混系列</title>
+    <link href="/project/2020/11/24/linux01/"/>
+    <url>/project/2020/11/24/linux01/</url>
+    
+    <content type="html"><![CDATA[<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><code class="hljs awk">查看当前进程的线程数量<br><span class="hljs-comment"># pstree -p 进程号 | wc -l</span><br><br>查看文件夹下文件数量<br><span class="hljs-comment"># ls | wc -w</span><br><br>查看磁盘占用：<br><span class="hljs-comment"># df -h</span><br><br>查看内存占用<br><span class="hljs-comment"># free -m</span><br><br>查看端口占用<br><span class="hljs-comment"># netstat -anp | grep 端口号</span><br><br>查看全部端口占用<br><span class="hljs-comment"># netstat -nultp</span><br><br>查看机器是固态还是机械<br><span class="hljs-comment"># lsblk -d -o name,rota</span><br>对于其返回值，看rota值来判断，如果rota为<span class="hljs-number">1</span>，则意味旋转，则为机械盘，若rota为<span class="hljs-number">0</span>则意味着发该盘为固态<br><br>查看硬盘信息<br><span class="hljs-comment"># fdisk -l</span><br><span class="hljs-comment"># hdparm -i /dev/sda1</span><br><span class="hljs-comment"># hdparm -i /dev/sdb1 |grep -i serialno</span><br>SerialNo=Z1Z0MKWS 硬盘序列号<br><br>vim中查询计数（例：查yes）<br><span class="hljs-comment"># :%s/yes//gn</span><br><br>查看某个进程的线程数<br><span class="hljs-comment"># pstree -p 进程id | wc -l</span><br><br>远程复制<br><span class="hljs-comment"># scp -r flume/ hadoop@hadoop03:$PWD</span><br><br>查看cpu个数<br><span class="hljs-comment"># lscpu</span><br> <br>每个cpu的核数<br><span class="hljs-comment">#cat /proc/cpuinfo | grep &quot;cpu cores&quot; | uniq</span><br> <br>查看内存总数<br><span class="hljs-comment">#cat /proc/meminfo | grep MemTotal</span><br><br>修改拥有者（chown）<br><span class="hljs-comment"># chown hadoop:hadoop rootfs</span><br><br>修改权限（chmod ）<br>  文字设定法<br><span class="hljs-comment"># chmod [who] [+ | - | =] [mode] 文件名</span><br>  eg: chmod g+r，o+r example<br>    who：<br>      u 表示“用户（user）”，即文件或目录的所有者。<br>      g 表示“同组（group）用户”，即与文件属主有相同组ID的所有用户。<br>      o 表示“其他（others）用户”。<br>      a 表示“所有（all）用户”。它是系统默认值。<br>    操作符：<br>      + 添加某个权限。<br>      - 取消某个权限。<br>      = 赋予给定权限并取消其他所有权限（如果有的话）。<br>    mode：<br>      r 可读。<br>      w 可写。<br>      x 可执行。<br>      X 只有目标文件对某些用户是可执行的或该目标文件是目录时才追加x 属性。<br>      s 在文件执行时把进程的属主或组ID置为该文件的文件属主。方式“u＋s”设置文件的用户ID位，“g＋s”设置组ID位。<br>      t 保存程序的文本到交换设备上。<br>      u 与文件属主拥有一样的权限。<br>      g 与和文件属主同组的用户拥有一样的权限。<br>      o 与其他用户拥有一样的权限。<br>  数字设定法<br><span class="hljs-comment"># chmod [mode] 文件名</span><br><span class="hljs-number">0</span>表示没有权限，<span class="hljs-number">1</span>表示可执行权限，<span class="hljs-number">2</span>表示可写权限，<span class="hljs-number">4</span>表示可读权限，然后将其相加。<br><br><br>[viewer@ tomcat]$ ll<br>total <span class="hljs-number">160</span><br>-rw-r----- <span class="hljs-number">1</span> root root  <span class="hljs-number">7142</span> Dec <span class="hljs-number">12</span>  <span class="hljs-number">2018</span> RELEASE-NOTES<br>-rw-r----- <span class="hljs-number">1</span> root root <span class="hljs-number">16262</span> Dec <span class="hljs-number">12</span>  <span class="hljs-number">2018</span> RUNNING.txt<br>drwxr-x--- <span class="hljs-number">2</span> root root  <span class="hljs-number">4096</span> Feb <span class="hljs-number">27</span> <span class="hljs-number">13</span>:<span class="hljs-number">34</span> temp<br>drwxr-x--- <span class="hljs-number">4</span> root root  <span class="hljs-number">4096</span> Apr <span class="hljs-number">19</span> <span class="hljs-number">13</span>:<span class="hljs-number">36</span> webapps<br>drwxr-x--- <span class="hljs-number">3</span> root root  <span class="hljs-number">4096</span> Feb <span class="hljs-number">27</span> <span class="hljs-number">13</span>:<span class="hljs-number">35</span> work<br><br><span class="hljs-comment">#清除cache</span><br>echo <span class="hljs-number">1</span> &gt; <span class="hljs-regexp">/proc/</span>sys<span class="hljs-regexp">/vm/</span>drop_caches:表示清除pagecache。<br>echo <span class="hljs-number">2</span> &gt; <span class="hljs-regexp">/proc/</span>sys<span class="hljs-regexp">/vm/</span>drop_caches:表示清除回收slab分配器中的对象（包括目录项缓存和inode缓存）。slab分配器是内核中管理内存的一种机制，其中很多缓存数据实现都是用的pagecache。<br>echo <span class="hljs-number">3</span> &gt; <span class="hljs-regexp">/proc/</span>sys<span class="hljs-regexp">/vm/</span>drop_caches:表示清除pagecache和slab分配器中的缓存对象。<br><br>从本地复制到远程<br><span class="hljs-comment"># 拷贝文件</span><br>scp <span class="hljs-regexp">/home/</span>test<span class="hljs-regexp">/test.txt root@192.168.0.2:/</span>home<span class="hljs-regexp">/test/</span><br><span class="hljs-comment"># 拷贝目录</span><br>scp -r <span class="hljs-regexp">/home/</span>test<span class="hljs-regexp">/ root@192.168.0.2:/</span>home<span class="hljs-regexp">/test/</span><br><br>从远程复制到本地<br><span class="hljs-comment"># 拷贝文件</span><br>scp root@<span class="hljs-number">192.168</span>.<span class="hljs-number">0.2</span>:<span class="hljs-regexp">/home/</span>test<span class="hljs-regexp">/ /</span>home<span class="hljs-regexp">/test/</span>test.txt<br><span class="hljs-comment"># 拷贝目录</span><br>scp -r root@<span class="hljs-number">192.168</span>.<span class="hljs-number">0.2</span>:<span class="hljs-regexp">/home/</span>test<span class="hljs-regexp">/ v/</span>home<span class="hljs-regexp">/test/</span><br><br><span class="hljs-comment"># 压缩解压</span><br>压缩：<br>tar -zcvf <span class="hljs-regexp">/home/</span>xahot.tar.gz /xahot<br>zip -r .<span class="hljs-regexp">/xahot.zip ./</span>* -r<br><br><br>解压：<br>tar –xvf file.tar <span class="hljs-regexp">//</span>解压 tar包<br>tar -xzvf file.tar.gz <span class="hljs-regexp">//</span>解压tar.gz<br>tar -xjvf file.tar.bz2   <span class="hljs-regexp">//</span>解压 tar.bz2<br>tar –xZvf file.tar.Z   <span class="hljs-regexp">//</span>解压tar.Z<br>unrar e file.rar <span class="hljs-regexp">//</span>解压rar<br>unzip file.zip <span class="hljs-regexp">//</span>解压zip<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>linux</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>angular服务详解</title>
+    <link href="/project/2020/08/04/angular-service/"/>
+    <url>/project/2020/08/04/angular-service/</url>
+    
+    <content type="html"><![CDATA[<h3 id="根据具体使用场景，-providers-将有三种不同的用法："><a href="#根据具体使用场景，-providers-将有三种不同的用法：" class="headerlink" title="根据具体使用场景， providers: [] 将有三种不同的用法："></a>根据具体使用场景， providers: [] 将有三种不同的用法：</h3><ol><li>在预加载的模块的@NgModule装饰器中指定 providers: []</li><li>在懒加载的模块的@NgModule装饰器中指定 providers: [] </li><li>在@Component和@Directive装饰器中指定 providers: []</li></ol><p><code>angular6</code>之后，我们通过使用 <code>@Injectable</code> 装饰器的新增的 <code>provideIn</code> 属性来使用它。<br>我们可以将<code>provideIn</code>视为以反向方式指定依赖关系。 现在不是模块申明需要哪些服务，而是服务本身宣布它应该提供给哪些模块使用<br>在 <code>providedIn</code> 出现之前，需要在主模块的 <code>providers: []</code> 中注入所有公共服务。然后，组件需要导入该模块，这将导致所有（可能的大量）的服务导入进该组件，即使我们只想使用其中一个服务。</p><hr><h6 id="服务注入过程图解："><a href="#服务注入过程图解：" class="headerlink" title="服务注入过程图解："></a>服务注入过程图解：</h6><p><img src="/images/angular/service.png" alt="imgage"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>原理知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>angular</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>webpack分析打包大小</title>
+    <link href="/project/2020/07/29/webpack-analyzer/"/>
+    <url>/project/2020/07/29/webpack-analyzer/</url>
+    
+    <content type="html"><![CDATA[<figure class="highlight elm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs elm"><span class="hljs-number">1</span>、安装插件<br><span class="hljs-title">npm</span> install <span class="hljs-comment">--save-dev webpack-bundle-analyzer</span><br><br><span class="hljs-number">2</span>、打包<br><span class="hljs-title">ng</span> build <span class="hljs-comment">--prod --stats-json</span><br><br><span class="hljs-number">3</span>、启动<br><span class="hljs-title">npm</span> run bundle-re<span class="hljs-keyword">port</span><br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>webpack</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>webpack自定义插件</title>
+    <link href="/project/2020/07/20/webpack-custom-plugin/"/>
+    <url>/project/2020/07/20/webpack-custom-plugin/</url>
+    
+    <content type="html"><![CDATA[<h2 id="webpack构建流程："><a href="#webpack构建流程：" class="headerlink" title="webpack构建流程："></a>webpack构建流程：</h2><ol><li>初始化参数：从配置文件和 Shell 语句中读取与合并参数，得出最终的参数；</li><li>开始编译：用上一步得到的参数初始化 Compiler 对象，complier可以视为一个webpack的实例，存在于webpack从启动到结束的整个过程，他包含了webpack的module、plugin等参数信息。执行对象的 run 方法开始执行编译；</li><li>确定入口：根据配置中的 entry 找出所有的入口文件；</li><li>创建compilation对象：可以理解为webpack一次编译的过程，包含了当前编译环境的所有资源，包括编译后的文件。</li><li>翻译模块：通过配置信息，调用loader进行模块翻译，使用acorn将模块转换为AST（抽象语法树）,当遇到require依赖时，创建依赖并加入依赖数组，再找出依赖的依赖，递归处理所有的依赖。</li><li>输出资源：根据入口和模块之间的依赖关系，组装成一个个包含多个模块的 Chunk，再把每个 Chunk 转换成一个单独的文件加入到输出列表，这步是可以修改输出内容的最后机会；</li><li>在确定好输出内容后，根据配置确定输出的路径和文件名，把文件内容写入到文件系统。</li></ol><h2 id="一个典型的Webpack插件代码如下："><a href="#一个典型的Webpack插件代码如下：" class="headerlink" title="一个典型的Webpack插件代码如下："></a>一个典型的Webpack插件代码如下：</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// 插件代码</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MyWebpackPlugin</span> </span>&#123;<br>  <span class="hljs-function"><span class="hljs-title">constructor</span>(<span class="hljs-params">options</span>)</span> &#123;<br>  &#125;<br>  <br>  <span class="hljs-function"><span class="hljs-title">apply</span>(<span class="hljs-params">compiler</span>)</span> &#123;<br>    <span class="hljs-comment">// 在emit阶段插入钩子函数</span><br>    compiler.hooks.emit.tap(<span class="hljs-string">&#x27;MyWebpackPlugin&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">compilation</span>) =&gt;</span> &#123;&#125;);<br>    <br>   <span class="hljs-comment">// </span><br>   compileer.hooks.阶段.tap函数(<span class="hljs-string">&#x27;插件名称&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">阶段回调参数</span>) =&gt;</span> &#123;<br>  <br>   &#125;);<br>  &#125;<br>&#125;<br><br><span class="hljs-built_in">module</span>.exports = MyWebpackPlugin;apply方法中插入钩子的一般形式如下：<br></code></pre></td></tr></table></figure><h5 id="常见钩子"><a href="#常见钩子" class="headerlink" title="常见钩子"></a>常见钩子</h5><p>Webpack会根据执行流程来回调对应的钩子，下面我们来看看都有哪些常见钩子，这些钩子支持的tap操作是什么。</p><table><thead><tr><th>钩子</th><th>说明</th><th>参数</th><th>类型</th></tr></thead><tbody><tr><td>afterPlugins</td><td>启动一次新的编译</td><td>compiler</td><td>同步</td></tr><tr><td>compile</td><td>创建compilation对象之前</td><td>compilationParams</td><td>同步</td></tr><tr><td>compilation</td><td>compilation对象创建完成</td><td>compilation</td><td>同步</td></tr><tr><td>emit</td><td>资源生成完成，输出之前</td><td>compilation</td><td>异步</td></tr><tr><td>afterEmit</td><td>资源输出到目录完成</td><td>compilation</td><td>异步</td></tr><tr><td>done</td><td>完成编译</td><td>stats</td><td>同步</td></tr></tbody></table><h2 id="Tapable"><a href="#Tapable" class="headerlink" title="Tapable"></a>Tapable</h2><blockquote><p>Tapable是Webpack的一个核心工具，Webpack中许多对象扩展自Tapable类。Tapable类暴露了tap、tapAsync和tapPromise方法，可以根据钩子的同步/异步方式来选择一个函数注入逻辑。</p></blockquote><ul><li>tap 同步钩子</li><li>tapAsync 异步钩子，通过callback回调告诉Webpack异步执行完毕</li><li>tapPromise 异步钩子，返回一个Promise告诉Webpack异步执行完毕</li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>原理知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>webpack</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>babel-loader的原理</title>
+    <link href="/project/2020/07/10/babel-loader/"/>
+    <url>/project/2020/07/10/babel-loader/</url>
+    
+    <content type="html"><![CDATA[<h4 id="es6转es5分为3步："><a href="#es6转es5分为3步：" class="headerlink" title="es6转es5分为3步："></a>es6转es5分为3步：</h4><ol><li>解析。词法分析和语法分析。<br> 生成ES6语法树 语法分析，生成抽象语法树</li><li>转换。根据ES6 ast生成ES5 ast。</li><li>代码生成。根据ES5ast生成ES5代码</li></ol><h6 id="流程："><a href="#流程：" class="headerlink" title="流程："></a>流程：</h6><p>es6代码的输入—》babelon进行解析—》得到AST–》plugin用babel-traverse对AST树进行遍历 —》得到新的AST树 —》使用babel-genertor通过AST树生成es5代码。</p><h4 id="Babel包的构成"><a href="#Babel包的构成" class="headerlink" title="Babel包的构成"></a>Babel包的构成</h4><h6 id="核心包"><a href="#核心包" class="headerlink" title="核心包"></a>核心包</h6><ul><li>babel-core：是babel转译器本身，提供转译的API，例如babel.transform等，webpack的babel-loader就是调用这些API完成转译的</li><li>babylon：js的词法解析器</li><li>babel-traverse：用于对AST（抽象语法树Abstract Syntax Tree）的遍历</li><li>babel-generator：根据AST生成代码</li></ul><h6 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h6><ul><li>babel-cli：用于命令行转码</li><li>babel-types：用于检验，构建和变更AST的节点</li><li>babel-helpers：一系列预制的babel-template函数，用于提供给一些plugins使用</li><li>babel-template：辅助函数，用于从字符串形式的代码来构建AST树节点</li><li>babel-code-frame：用于生成错误信息，打印出错误点源代码帧以及指出出错位置</li><li>babel-register：通过绑定node.js的require来完成自动编译</li><li>babel-polyfill：JS标准新增的原生对象和API的shim，实现上仅仅是core-js和regenerator-runtime两个包的封装</li><li>babel-runtime：类似于polyfill，但是不会污染全局变量</li></ul><h5 id="polyfill与runtime的区别"><a href="#polyfill与runtime的区别" class="headerlink" title="polyfill与runtime的区别"></a>polyfill与runtime的区别</h5><p>最主要的区别就是polyfill引入后，会将新的原生对象、API这些都直接引入到全局环境，这样就会污染全局变量，这也是polyfill的缺陷。所以就轮到babel-runtime上场了。</p><h5 id="transform-runtime和babel-runtime"><a href="#transform-runtime和babel-runtime" class="headerlink" title="transform-runtime和babel-runtime"></a>transform-runtime和babel-runtime</h5><p>transform-runtime是将js中使用到新的原生对象和静态方法转译成对babel-runtime的引用，而其中babel-runtime的功能其实最终也是由core-js来实现的，其实真正的核心是上面所讲的core-js，其他的都是包装。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>原理知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>webpack</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>angular自定义表单组件</title>
+    <link href="/project/2020/07/02/angular-custom-form/"/>
+    <url>/project/2020/07/02/angular-custom-form/</url>
+    
+    <content type="html"><![CDATA[<h2 id="自定义表单组件可以分为两种："><a href="#自定义表单组件可以分为两种：" class="headerlink" title="自定义表单组件可以分为两种："></a>自定义表单组件可以分为两种：</h2><p>1、组件中有input、areatext、select等原生可设置formctrol组件。以下简称：【有原生组件】<br>2、组件中没有以上组件。以下简称：【无原生组件】</p><p>针对于以上两种类型组件，有相应两种方式形成组件。</p><h2 id="【有原生组件】"><a href="#【有原生组件】" class="headerlink" title="【有原生组件】"></a>【有原生组件】</h2><blockquote><p>注意：父组件中使用子组件   需要加ngDefaultControl属性，否则会报错：no value accessor for form control with name</p></blockquote><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-meta"># 父组件</span><br>&lt;hc-form-mobile <br>    ngDefaultControl <br>    [<span class="hljs-meta">parentForm</span>]=<span class="hljs-string">&quot;form&quot;</span> nz-col <br>    [<span class="hljs-meta">nzSm</span>]=<span class="hljs-string">&quot;styleInfo.controlGridNum&quot;</span> <br>    formControlName=<span class="hljs-string">&quot;phone&quot;</span> <br>    [<span class="hljs-meta">styleInfo</span>]=<span class="hljs-string">&quot;styleInfo&quot;</span>&gt;&lt;/hc-form-mobile&gt;<br></code></pre></td></tr></table></figure><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"># 子组件  对应html中form属性也要设置未parentForm <br>export <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">FormMobileComponent</span> <span class="hljs-title">implements</span> <span class="hljs-title">OnInit</span> </span>&#123;<br><br>  <span class="hljs-meta">@Input()</span> parentForm :FormGroup;<span class="hljs-comment">//从父组件传来的父组件formgroup</span><br>  <span class="hljs-meta">@Input()</span> styleInfo :FormLayoutStyleInterface;<br><br>  <span class="hljs-keyword">constructor</span>(<br>    <span class="hljs-keyword">public</span> i18n: I18NService,<br>  ) &#123;&#125;<br><br>  ngOnInit(): void &#123;<span class="hljs-comment">//设置检验规则</span><br>    <span class="hljs-keyword">this</span>.phone.setValidators([Validators.required, Validators.pattern(/^<span class="hljs-number">1</span>\d&#123;<span class="hljs-number">10</span>&#125;$/)]);<br>  &#125;<br><br>  <span class="hljs-keyword">get</span> phone() &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.parentForm.controls.phone;<br>  &#125;<br><br>  <span class="hljs-keyword">set</span> phone(<span class="hljs-keyword">data</span>) &#123;<br>    <span class="hljs-keyword">this</span>.parentForm.controls.phone.setValue(<span class="hljs-keyword">data</span>);<br>  &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure><h2 id="【无原生组件】"><a href="#【无原生组件】" class="headerlink" title="【无原生组件】"></a>【无原生组件】</h2><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"># 子组件  注意看【重点】<br><span class="hljs-meta">@Component(&#123;</span><br><span class="hljs-meta">  selector: <span class="hljs-meta-string">&#x27;hc-form-department&#x27;</span>,</span><br><span class="hljs-meta">  templateUrl: <span class="hljs-meta-string">&#x27;./form-department.component.html&#x27;</span>,</span><br><span class="hljs-meta">  styles: [</span><br><span class="hljs-meta">  ],</span><br><span class="hljs-meta">  //【重点1】</span><br><span class="hljs-meta">  providers: [&#123;</span><br><span class="hljs-meta">    provide: NG_VALUE_ACCESSOR,</span><br><span class="hljs-meta">    useExisting: FormDepartmentComponent,</span><br><span class="hljs-meta">    multi: true</span><br><span class="hljs-meta">  &#125;]</span><br><span class="hljs-meta">&#125;)</span><br><span class="hljs-comment">//【重点2】，实现接口ControlValueAccessor </span><br>export <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">FormDepartmentComponent</span> <span class="hljs-title">implements</span> <span class="hljs-title">OnInit</span>,<span class="hljs-type">ControlValueAccessor &#123;</span></span><br><br>  form: FormGroup;<br>  formChangeFn;<br><br>  departmentList:[&#123;<br>    deptNum:<span class="hljs-string">&#x27;&#x27;</span>,<br>    deptName:<span class="hljs-string">&#x27;&#x27;</span><br>  &#125;];<br><br>  nodes = [];<br><br>  <span class="hljs-keyword">constructor</span>(<br>    <span class="hljs-keyword">public</span> i18n: I18NService,<br>    <span class="hljs-keyword">private</span> fb: FormBuilder,<br>    <span class="hljs-keyword">private</span> http: HttpClientService,<br>    <span class="hljs-keyword">private</span> convertTree: ConvertTreeService,<br>    <span class="hljs-keyword">private</span> modal: ModalHelper<br>  ) &#123;<br>    <span class="hljs-keyword">this</span>.form = fb.group(&#123;<br>      deptNum: [<span class="hljs-literal">null</span>],<br>    &#125;);<br>  &#125;<br><br>  ngOnInit(): void &#123;<br>    <span class="hljs-keyword">this</span>.getAllDepartment();<br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 新建部门</span><br><span class="hljs-comment">   */</span><br>  addDepartment()&#123;<br>    <span class="hljs-keyword">this</span>.modal.createStatic(UserDepartmentEditComponent,<br>      &#123;record: &#123;isEdit: <span class="hljs-literal">false</span>, key: <span class="hljs-number">0</span>&#125;&#125;,<br>      &#123; size: <span class="hljs-string">&#x27;md&#x27;</span>&#125;<br>    ).subscribe((res) =&gt; &#123;<br>      <span class="hljs-keyword">this</span>.getAllDepartment();<br>    &#125;);<br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 获取全部部门列表</span><br><span class="hljs-comment">   */</span><br>  getAllDepartment()&#123;&#125;<br><br>  onChange(<span class="hljs-keyword">data</span>)&#123;<br>    <span class="hljs-keyword">this</span>.formChangeFn(<span class="hljs-keyword">data</span>);<br>  &#125;<br>  <span class="hljs-comment">//【重点3】实现方法registerOnChange、registerOnTouched、writeValue</span><br>  registerOnChange(fn: any): void &#123;<br>    <span class="hljs-keyword">this</span>.formChangeFn = fn;<br>  &#125;<br><br>  registerOnTouched(fn: any): void &#123;<br>  &#125;<br><br>  writeValue(value: any): void &#123;<br>    <span class="hljs-keyword">if</span>(value)&#123;<br>      <span class="hljs-keyword">this</span>.deptNum = value;<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">get</span> deptNum() &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.form.controls.deptNum;<br>  &#125;<br><br>  <span class="hljs-keyword">set</span> deptNum(<span class="hljs-keyword">data</span>) &#123;<br>    <span class="hljs-keyword">this</span>.form.controls.deptNum.setValue(<span class="hljs-keyword">data</span>);<br>  &#125;<br>  <span class="hljs-comment">//【重点4】这是自定义的函数，为了在父组件提交时检测子组件的值并提示。</span><br>  checkValidity() &#123;<br>    <span class="hljs-keyword">this</span>.deptNum.markAsDirty();<br>    <span class="hljs-keyword">this</span>.deptNum.updateValueAndValidity();<br>  &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>项目相关</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>angular</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>angular的ChangeDetectorRef</title>
+    <link href="/project/2020/05/10/ChangeDetectorRef/"/>
+    <url>/project/2020/05/10/ChangeDetectorRef/</url>
+    
+    <content type="html"><![CDATA[<h3 id="Angular有两种变化检测策略-Change-Detection-Strategy"><a href="#Angular有两种变化检测策略-Change-Detection-Strategy" class="headerlink" title="Angular有两种变化检测策略(Change Detection Strategy)"></a>Angular有两种变化检测策略(Change Detection Strategy)</h3><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs awk">enum ChangeDetectionStrategy &#123;<br>  <span class="hljs-regexp">//</span> 使用 CheckOnce 策略，这意味着自动更改检测将停用，<br>  <span class="hljs-regexp">//</span> 直到通过将策略设置为<span class="hljs-string">&quot;Default&quot;</span>（总是检查）重新激活。<br>  OnPush: <span class="hljs-number">0</span> <br><br>  <span class="hljs-regexp">//</span> 使用默认的 CheckAlway 策略，其中更改检测是自动的，直到显式停用<br>  Default: <span class="hljs-number">1</span><br>&#125;<br><br>当使用 OnPush 策略的时候，只有在以下任一情况下，Angular才会检测此组件<br><span class="hljs-number">1</span>.组件的任一@Input属性被父组件设为新值，如果@Input是引用类型，则需被设为新的实例才会触发变化检测。<br><span class="hljs-number">2</span>.事件发生。无论此事件是否和业务有关，甚至是个空事件，都可。<br></code></pre></td></tr></table></figure><h5 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h5><figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs oxygene"><span class="hljs-number">1</span>、引入ChangeDetectorRef模块<br>import <span class="hljs-comment">&#123; ChangeDetectorRef &#125;</span> <span class="hljs-keyword">from</span> “angular”;<br><span class="hljs-number">2</span>、声明<br>@Component(<span class="hljs-comment">&#123;</span><br><span class="hljs-comment">  changeDetection: ChangeDetectionStrategy.OnPush,</span><br><span class="hljs-comment">&#125;</span>)<br><span class="hljs-number">3</span>、引用<br><span class="hljs-function"><span class="hljs-keyword">constructor</span><span class="hljs-params">(<span class="hljs-keyword">private</span> cd:ChangeDetectorRef)</span> <span class="hljs-comment">&#123;</span></span><br><span class="hljs-comment"><span class="hljs-function">&#125;</span></span><br><span class="hljs-function">4、检测</span><br><span class="hljs-function"><span class="hljs-title">this</span>.<span class="hljs-title">cd</span>.<span class="hljs-title">detectChanges</span><span class="hljs-params">()</span>;</span>实时检测页面及其子元素的变化<br></code></pre></td></tr></table></figure><h5 id="ChangeDetectorRef-是组件的变化检测器的引用"><a href="#ChangeDetectorRef-是组件的变化检测器的引用" class="headerlink" title="ChangeDetectorRef 是组件的变化检测器的引用"></a>ChangeDetectorRef 是组件的变化检测器的引用</h5><p><strong>当使用 OnPush 策略的时候，若输入属性没有发生变化，组件的变化检测将会被跳过</strong></p><figure class="highlight d"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs d">onpush策略：<br>如果组件众多，组件中又包含组件，那每次这种不加区分的变化检测对页面的性能却有一定的消耗，而针对这种问题优化就有了onPush的变化检测策略。<br><br><span class="hljs-keyword">export</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">class</span> ChangeDetectorRef &#123;<br>  <span class="hljs-keyword">abstract</span> markForCheck(): <span class="hljs-keyword">void</span> <span class="hljs-comment">//当组件使用OnPush变更检测策略时，把该组件显式标记为已更改，以便它再次进行检查。</span><br>  <span class="hljs-keyword">abstract</span> detach(): <span class="hljs-keyword">void</span> <span class="hljs-comment">//从变更检测树中分离开组件。 已分离的组件在重新附加上去之前不会被检查。 与 detectChanges() 结合使用，可以实现局部变更检测。</span><br>  <span class="hljs-keyword">abstract</span> reattach(): <span class="hljs-keyword">void</span> <span class="hljs-comment">//把以前分离开的组件重新附加到变更检测树上。 组件会被默认附加到这棵树上。</span><br>  <span class="hljs-keyword">abstract</span> detectChanges(): <span class="hljs-keyword">void</span> <span class="hljs-comment">//检查该组件及其子组件。与 detach 结合使用可以实现局部变更检测。</span><br>  <span class="hljs-keyword">abstract</span> checkNoChanges(): <span class="hljs-keyword">void</span> <span class="hljs-comment">//检查变更检测器及其子检测器，如果检测到任何更改，则抛出异常。</span><br>&#125;<br></code></pre></td></tr></table></figure><ul><li>markForCheck() - 当输入已更改或视图中发生了事件时，组件通常会标记为脏的（需要重新渲染）。调用此方法会确保即使那些触发器没有被触发，也仍然检查该组件。在组件的 metadata 中如果设置了 changeDetection: ChangeDetectionStrategy.OnPush 条件，那么变化检测不会再次执行，除非手动调用该方法。</li><li>detach() - 从变化检测树中分离变化检测器，该组件的变化检测器将不再执行变化检测，除非手动调用 reattach() 方法。</li><li>reattach() - 重新添加已分离的变化检测器，使得该组件及其子组件都能执行变化检测</li><li>detectChanges() - 从该组件到各个子组件执行一次变化检测 检查该视图及其子视图。与 <a href="https://angular.cn/api/core/ChangeDetectorRef#detach">detach</a> 结合使用可以实现局部变更检测。</li></ul><blockquote><p>脏数据：就是用户改变了数据，就为脏数据。<br>在submit时，一定要标记所有的control为脏数据，且更新值和有效性校验。原因是，初始化进入可能不改动数据直接保存，这时会不满足校验规则，但不会触发校验。</p></blockquote>]]></content>
+    
+    
+    <categories>
+      
+      <category>原理知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>angular</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>angular国际化方案</title>
+    <link href="/project/2020/05/09/angular-translate/"/>
+    <url>/project/2020/05/09/angular-translate/</url>
+    
+    <content type="html"><![CDATA[<p>Angular 国际化常见有 Angular 内置和基于 @ngx-translate/core （请参考官网了解更多实现细节）两种不同国际化方案。</p><h3 id="两种方案"><a href="#两种方案" class="headerlink" title="两种方案"></a>两种方案</h3><h6 id="1、Angular-内置（多个app）"><a href="#1、Angular-内置（多个app）" class="headerlink" title="1、Angular 内置（多个app）"></a>1、Angular 内置（多个app）</h6><p>Angular 文档（中文版）有完整的描述，注意需要为每一种语言构建和部署单独的应用程序版本。</p><h6 id="2、-ngx-translate-core（推荐，只用一套app）"><a href="#2、-ngx-translate-core（推荐，只用一套app）" class="headerlink" title="2、@ngx-translate/core（推荐，只用一套app）"></a>2、@ngx-translate/core（推荐，只用一套app）</h6><p>@ngx-translate/core 是社区版本的 Angular 国际化，相比较 Angular 内置它是动态性，无须针对不同语言构建和部署单独版本，并且大部分情况下可以立即呈现。</p><hr><h3 id="ngx-translate-core使用"><a href="#ngx-translate-core使用" class="headerlink" title="@ngx-translate/core使用"></a>@ngx-translate/core使用</h3><h6 id="1、html中"><a href="#1、html中" class="headerlink" title="1、html中"></a>1、html中</h6><figure class="highlight handlebars"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs handlebars"><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">a</span>&gt;</span></span><span class="hljs-template-variable">&#123;&#123; <span class="hljs-name">&#x27;menu.fullscreen&#x27;</span> | i18n&#125;&#125;</span><span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span></span><br></code></pre></td></tr></table></figure><h6 id="2、ts中-动态引入语言包，获取其中的文字"><a href="#2、ts中-动态引入语言包，获取其中的文字" class="headerlink" title="2、ts中,动态引入语言包，获取其中的文字"></a>2、ts中,动态引入语言包，获取其中的文字</h6><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">this</span>.i18n.fanyi(<span class="hljs-string">&#x27;app.analysis.traffic&#x27;</span>)<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>angular</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>rxjs</title>
+    <link href="/project/2020/04/10/rxjs/"/>
+    <url>/project/2020/04/10/rxjs/</url>
+    
+    <content type="html"><![CDATA[<p>Rxjs：异步编程。angular已经集成了。</p><h6 id="目前常见的异步编程的几种方法："><a href="#目前常见的异步编程的几种方法：" class="headerlink" title="目前常见的异步编程的几种方法："></a>目前常见的异步编程的几种方法：</h6><ol><li>回调函数</li><li>事件监听/发布订阅</li><li>Promise</li><li>Rxjs</li></ol><p><img src="/images/rxjs/clipboard3.png" alt="image"></p><h5 id="前提：Promise-的缺点"><a href="#前提：Promise-的缺点" class="headerlink" title="前提：Promise 的缺点"></a>前提：Promise 的缺点</h5><p>Promise 固然是一个重大的进步，但在有些场景下仍然是不够的。比如，Promise 的特点是无论有没有人关心它的执行结果，它都会立即开始执行，并且你没有机会取消这次执行。显然，在某些情况下这么做是浪费的甚至错误的。仍然以电商为例，如果某商户的订单不允许取消，你还会去买吗？再举个编程领域的例子：如果你发起了一个 Ajax 请求，然后用户导航到了另一个路由，显然，你这个请求如果还没有完成就应该被取消，而不应该发出去。但是使用 Promise，你做不到，不是因为实现方面的原因，而是因为它在概念层（接口定义上）就无法支持取消。</p><p>此外，由于 Promise 只会承载一个值，因此当我们要处理的是一个集合的时候就比较困难了。比如对于一个随机数列（总数未知），如果我们要借助 Web API 检查每个数字的有效性，然后对前一百个有效数字进行求和，那么用 Promise 写就比较麻烦了。<br>我们需要一个更高级的 Promise。</p><h5 id="一、Observable"><a href="#一、Observable" class="headerlink" title="一、Observable"></a>一、Observable</h5><p>它就是可观察对象（Observable [əbˈzɜrvəbl]），Observable 顾名思义就是可以被别人观察的对象，当它变化时，观察者就可以得到通知。换句话说，它负责生产数据，别人可以消费它生产的数据。</p><p>如果你是个资深后端，那么可能还记得 MessageQueue 的工作模式，它们很像。如果不懂 MQ 也没关系，我还是用日常知识给你打个比方。</p><p>Observable 就像个传送带。这个传送带不断运行，围绕这个传送带建立了一条生产线，包括一系列工序，不同的工序承担单一而确定的职责。每个工位上有一个工人。</p><p>整个传送带的起点是原料箱，原料箱中的原料不断被放到传送带上。工人只需要待在自己的工位上，对面前的原料进行加工，然后放回传送带上或放到另一条传送带上即可，简单、高效、无意外 —— 符合程序员的审美。</p><p>而且这个生产线还非常先进 —— 不接单就不生产，非常有效地杜绝了浪费。</p><h5 id="二、FRP"><a href="#二、FRP" class="headerlink" title="二、FRP"></a>二、FRP</h5><p>这种设计，看上去很美，对吧？但光看着漂亮可不行，在编程时要怎么实现呢？实际上，这是一种编程范式，叫做函数响应式编程（FRP）。它比 Promise 可年轻多了，直到 1997 年才被人提出来。</p><p>顾名思义，FRP 同时具有函数式编程和响应式编程的特点。响应式编程是什么呢？形象的说，它的工作模式就是“饭来张口，衣来伸手”，也就是说，等待外界的输入，并做出响应。流水线每个工位上的工人正是这种工作模式。</p><p>工业上，流水线是人类管理经验的结晶，它所做的事情是什么呢？本质上就是把每个处理都局部化，以减小复杂度（降低对工人素质的要求）。而这，正是软件行业所求之不得的。响应式，就是编程领域的流水线。</p><p>那么函数式呢？函数式最显著的特征就是没有副作用，而这恰好是对流水线上每个工序的要求。显然，如果某个工序的操作会导致整个生产线平移 10 米，那么用不了多久这个生产线就要掉到海里了，这样的生产线毫无价值。<br>因此，响应式和函数式几乎是注定要在一起的。</p><h5 id="三、RxJS"><a href="#三、RxJS" class="headerlink" title="三、RxJS"></a>三、RxJS</h5><p><strong>RXJS是Observable的Javascript实现</strong></p><p>RxJS 就是 ReactiveX 在 JavaScript 语言上的实现。对于 JavaScript 程序员来说，不管你是前端还是 NodeJS 后端，RxJS 都会令你受益。<br>由于 JavaScript 本身的缺陷，RxJS 不得不采用了很多怪异的写法。它对于 Java / C# 等背景的程序员来说可能会显得比较怪异，不过，你可以先忽略它们，聚焦在编程范式和接下来要讲的操作符语义上。</p><figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">典型的写法<br><span class="hljs-keyword">of</span>(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>).pipe(<br>  <span class="hljs-built_in">filter</span>(<span class="hljs-keyword">item</span>=&gt;<span class="hljs-keyword">item</span> % <span class="hljs-number">2</span> === <span class="hljs-number">1</span>),<br>  map(<span class="hljs-keyword">item</span>=&gt;<span class="hljs-keyword">item</span> * <span class="hljs-number">3</span>),<br>).subscribe(<span class="hljs-keyword">item</span>=&gt; console.<span class="hljs-built_in">log</span>(<span class="hljs-keyword">item</span>))<br>它会输出：<br><span class="hljs-number">3</span><br><span class="hljs-number">9</span><br></code></pre></td></tr></table></figure><p>其中 of 称为创建器（creator），用来创建流，它返回一个 Observable 类型的对象，filter 和 map 称为操作符（operator），用来对条目进行处理。这些操作符被当作 Observable 对象的 pipe 方法的参数传进去。诚然，这个写法略显怪异，不过这主要是被 js 的设计缺陷所迫，它已经是目前 js 体系下多种解决方案中相对好看的一种了。<br>Observable 对象的 subscribe 方法表示消费者要订阅这个流，当流中出现数据时，传给 subscribe 方法的回调函数就会被调用，并且把这个数据传进去。这个回调函数可能被调用很多次，取决于这个流中有多少条数据。</p><p><strong>注意，Observable 必须被 subscribe 之后才会开始生产数据。如果没人 subscribe 它，那就什么都不会做。</strong></p><h5 id="四、rxjs和promise的区别"><a href="#四、rxjs和promise的区别" class="headerlink" title="四、rxjs和promise的区别"></a>四、rxjs和promise的区别</h5><p><img src="/images/rxjs/clipboard.png" alt="image"></p><p>promise相较于Rxjs而言功能更单一 promise 只能将一个数据的状态由pending转换成resoloved或者rejected.而Rxjs可以处理多个数据对应complete和error状态但是Rxjs同时又拥有next方法。Observable是惰性的，需要subscribe的时候才输出值。promise内部状态是不可控制的，执行了就无法终止。而Observable可以定义如何取消异步方法。这也就是我下面会讨论到的一个异步场景。</p><h5 id="五、详解"><a href="#五、详解" class="headerlink" title="五、详解"></a>五、详解</h5><h6 id="在-RxJS-中用来解决异步事件管理的的基本概念是："><a href="#在-RxJS-中用来解决异步事件管理的的基本概念是：" class="headerlink" title="在 RxJS 中用来解决异步事件管理的的基本概念是："></a>在 RxJS 中用来解决异步事件管理的的基本概念是：</h6><ol><li>Observable (可观察对象): 表示一个概念，这个概念是一个可调用的未来值或事件的集合。</li><li>Observer (观察者): 一个回调函数的集合，它知道如何去监听由 Observable 提供的值。</li><li>Subscription (订阅): 表示 Observable 的执行，主要用于取消 Observable 的执行。</li><li>Operators (操作符): 采用函数式编程风格的纯函数 (pure function)，使用像 map、filter、concat、flatMap 等这样的操作符来处理集合。</li><li>Subject (主体): 相当于 EventEmitter，并且是将值或事件多路推送给多个 Observer 的唯一方式。</li><li>Schedulers (调度器): 用来控制并发并且是中央集权的调度员，允许我们在发生计算时进行协调，例如 setTimeout 或 requestAnimationFrame 或其他。</li></ol><p><img src="/images/rxjs/clipboard2.png" alt="image"></p><p>Observable 是同步的。</p><p>函数和 Observables 都是惰性运算。如果你不调用函数，console.log(‘Hello’) 就不会执行。Observables 也是如此，如果你不“调用”它(使用 subscribe)，console.log(‘Hello’) 也不会执行。此外，“调用”或“订阅”是独立的操作：两个函数调用会触发两个单独的副作用，两个 Observable 订阅同样也是触发两个单独的副作用。EventEmitters 共享副作用并且无论是否存在订阅者都会尽早执行，Observables 与之相反，不会共享副作用并且是延迟执行。<br>Observable 可以随着时间的推移“返回”多个值，这是函数所做不到的。Observables 传递值可以是同步的，也可以是异步的。</p><p>Observable 的核心关注点：</p><ul><li>创建 Observables</li><li>订阅 Observables</li><li>执行 Observables</li><li>清理 Observables</li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>rxjs</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>单行、多行超出</title>
+    <link href="/project/2020/03/24/css-line/"/>
+    <url>/project/2020/03/24/css-line/</url>
+    
+    <content type="html"><![CDATA[<h4 id="单行"><a href="#单行" class="headerlink" title="单行"></a>单行</h4><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-selector-tag">p</span>&#123;<br>    <span class="hljs-attribute">overflow</span>:hidden;<br>    <span class="hljs-attribute">text-overflow</span>:ellipsis;<br>    <span class="hljs-attribute">white-space</span>:nowrap;<br>&#125;<br></code></pre></td></tr></table></figure><h4 id="多行"><a href="#多行" class="headerlink" title="多行"></a>多行</h4><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-selector-tag">p</span>&#123;<br>    <span class="hljs-attribute">display</span>: -webkit-box;<br>    -webkit-line-clamp: <span class="hljs-number">2</span>;<br>    -webkit-box-orient: vertical;<br>    <span class="hljs-attribute">overflow</span>: hidden;<br>&#125;<br></code></pre></td></tr></table></figure><h4 id="判断单行文本是否溢出：比较scrollWidth是否大于offsetWidth"><a href="#判断单行文本是否溢出：比较scrollWidth是否大于offsetWidth" class="headerlink" title="判断单行文本是否溢出：比较scrollWidth是否大于offsetWidth"></a>判断单行文本是否溢出：比较scrollWidth是否大于offsetWidth</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"></span><br><span class="javascript">    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">main</span>(<span class="hljs-params"></span>) </span>&#123;</span><br><span class="javascript">      <span class="hljs-keyword">let</span> box = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&#x27;.box&#x27;</span>)</span><br><span class="javascript">      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;scrollWidth: &quot;</span>, box.scrollWidth)</span><br><span class="javascript">      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;offsetWidth: &quot;</span>, box.offsetWidth)</span><br><span class="javascript">      <span class="hljs-keyword">if</span> (box.scrollWidth &gt; box.offsetWidth) &#123;</span><br><span class="javascript">        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;出现了省略号&quot;</span>)</span><br><span class="javascript">      &#125; <span class="hljs-keyword">else</span> &#123;</span><br><span class="javascript">        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;没有出现省略号&quot;</span>)</span><br><span class="javascript">      &#125;</span><br><span class="javascript">    &#125;</span><br><span class="javascript">    main()</span><br><span class="javascript">  </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>css</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>前端模块化比较</title>
+    <link href="/project/2020/03/10/module/"/>
+    <url>/project/2020/03/10/module/</url>
+    
+    <content type="html"><![CDATA[<p>参考链接：<a href="https://blog.csdn.net/haochangdi123/article/details/80408874">https://blog.csdn.net/haochangdi123/article/details/80408874</a></p><h3 id="commonJs和es6比较总结"><a href="#commonJs和es6比较总结" class="headerlink" title="commonJs和es6比较总结"></a>commonJs和es6比较总结</h3><ol><li>CommonJS模块输出是一个值的拷贝，ES6模块输出是值的引用。</li><li>CommonJS模块是运行时加载，ES6模块是编译时输出接口。</li><li>CommonJS模块无论require多少次，都只会在第一次加载时运行一次，然后保存到缓存中，下次在require，只会去从缓存取。</li></ol><h3 id="一、commonJs"><a href="#一、commonJs" class="headerlink" title="一、commonJs"></a>一、commonJs</h3><ol><li>运行在服务端，node模块化，webpack就是以此写的node模块。浏览器不兼容。</li><li>特性：同步。</li><li>模块：引用(require) ， 定义(exports) ，标识(module)。</li><li>浏览器不兼容CommonJS的根本原因，也正是在于缺少四个Node.js环境的变量。<ul><li>module</li><li>exports</li><li>require</li><li>global</li></ul></li></ol><h3 id="二、AMD"><a href="#二、AMD" class="headerlink" title="二、AMD"></a>二、AMD</h3><ol><li>特性：异步。代表：require.js</li><li>先引入的模块，后使用引用模块的方法，所以我们称之为依赖前置。</li></ol><h3 id="三、CMD"><a href="#三、CMD" class="headerlink" title="三、CMD"></a>三、CMD</h3><ol><li>特性：异步。代表：sea.js</li><li>通用模块定义。依赖就近原则</li></ol><h3 id="四、es6"><a href="#四、es6" class="headerlink" title="四、es6"></a>四、es6</h3><p>上述commonJs，AMD，CMD都是ES5时期，ES6中已经实现模块化，完全可以取代他们的规范，成为浏览器和服务器通用的模块解决方案。</p><ol><li>ES6 模块的设计思想是尽量的<strong>静态化</strong>，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。CommonJS 和 AMD 模块，都只能在运行时确定这些东西。</li></ol><h3 id="五、require和import区别"><a href="#五、require和import区别" class="headerlink" title="五、require和import区别"></a>五、require和import区别</h3><ol><li>模块加载的时间<ul><li>require：运行时加载</li><li>import：编译时加载（效率更高）【由于是编译时加载，所以import命令会提升到整个模块的头部】</li></ul></li><li>require：模块就是对象，输入时必须查找对象属性<ul><li>require实质上整体加载了fs对象（fs模块），然后再从fs对象上读取方法</li><li>ES6模块，实质上从fs模块加载对应的方法，其他方法不加载</li></ul></li><li>CommonJS 模块输出的是一个<code>值的拷贝</code>，ES6 模块输出的是<code>值的引用</code></li></ol><h3 id="六、module-exports-和-exports方法的区别"><a href="#六、module-exports-和-exports方法的区别" class="headerlink" title="六、module.exports 和 exports方法的区别"></a>六、module.exports 和 exports方法的区别</h3><ol><li>export是设置导出模块对象的指定属性，可以导出多个</li><li>module.export既可以设置导出模块的所有属性，又可以设置导出模块的指定属性。<strong>如果说设置位到出所有属性，module.exports只认最后一次导出设置</strong></li></ol><figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs openscad"><span class="hljs-comment">//exports使用方式</span><br><span class="hljs-comment">// 可以多次导出多个属性</span><br>exports.func = <span class="hljs-built_in">str</span> =&gt; console.<span class="hljs-built_in">log</span>(<span class="hljs-built_in">str</span>)<br>exports.test = <span class="hljs-built_in">str</span> =&gt; console.<span class="hljs-built_in">log</span>(<span class="hljs-built_in">str</span>)<br><span class="hljs-comment">// 返回结果 &#123; func : [Function] , test : [Function] &#125;</span><br><br><br><span class="hljs-comment">// module.exports导出所有，只认最后一次导出设置</span><br><span class="hljs-keyword">module</span>.exports = &#123;<br>func: <span class="hljs-built_in">str</span> =&gt; console.<span class="hljs-built_in">log</span>(<span class="hljs-built_in">str</span>)<br>&#125;<br><span class="hljs-keyword">module</span>.exports = &#123;<br>test : <span class="hljs-built_in">str</span> =&gt; console.<span class="hljs-built_in">log</span>(<span class="hljs-built_in">str</span>)<br>&#125;<br><span class="hljs-comment">// 返回结果 &#123; test : [Function: test] &#125;</span><br></code></pre></td></tr></table></figure><h3 id="七、ES6使用export和import来导出-导入模块。"><a href="#七、ES6使用export和import来导出-导入模块。" class="headerlink" title="七、ES6使用export和import来导出/导入模块。"></a>七、ES6使用export和import来导出/导入模块。</h3><ol><li>export与export default均可用于导出常量/函数/文件/模块等；</li><li>在一个文件或模块中，export/import可以有多个，export default只有一个；</li><li>通过export方式导出，在导入时需要加{}，export default不需要；</li><li>export能导出变量/表达式，export default不可以。</li></ol><p>总结：</p><ul><li>module.exports与exports ，是CommonJS的规范，被使用于Node.js中。</li><li>export与export default ，是ES6规范，被使用于React或Vue中。</li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>js</tag>
+      
+      <tag>模块化</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>angular-依赖注入</title>
+    <link href="/project/2020/02/04/angular-di/"/>
+    <url>/project/2020/02/04/angular-di/</url>
+    
+    <content type="html"><![CDATA[<blockquote><p>在JavaScript语境下，依赖注入就是函数参数是函数而已（高阶函数，因为JS没有类），而在TypeScript语境下，依赖注入就是在类的构造函数中传入另一个类，类实例化时包括其参数的类也会被实例化。</p></blockquote><p>依赖注入就是控制反转概念的一种实现模式。<br>之前是我们需要什么服务，就去主动new一个对象，那依赖注入就是服务先注册到DI框架中，我去声明我需要什么服务，DI框架再把我需要的服务注入进来。如下图：</p><p><img src="/images/angular/DI.png" alt="image"></p><h5 id="依赖注入作用"><a href="#依赖注入作用" class="headerlink" title="依赖注入作用"></a>依赖注入作用</h5><p>&ensp; &ensp; 让框架帮你处理重要对象的生命周期的管理，不需要你显式地进行管理(对象构造和销毁)</p><h5 id="依赖注入包含三部分："><a href="#依赖注入包含三部分：" class="headerlink" title="依赖注入包含三部分："></a>依赖注入包含三部分：</h5><ol><li>提供商：负责把一个令牌（可能是字符串也可能是类）映射到一个依赖的列表，它告诉angular该如何根据指定的令牌创建对象。</li><li>注入器：解析依赖并注入他们。angular不需要我们创建注入器，在启动时，它会自己创建一个应用注入器—platformBrowserDynamic().bootstrapModule(AppModule)</li><li>依赖：被用于注入的对象，例如服务等等</li></ol><h5 id="详解"><a href="#详解" class="headerlink" title="详解"></a>详解</h5><p>1、提供商</p><ul><li>类提供商 useClass</li><li>别名提供商 useExisting</li><li>值提供商 useValue</li><li>工厂提供商 useFactory</li></ul><p>2、令牌：</p><ul><li>类</li><li>类-接口</li><li>InjectionToken</li></ul><p>3、注册提供商：可在模块中或组件中<br>4、服务：在服务中@Injectable() 是必写的。<strong>angular6之后，我们通过使用 @Injectable 装饰器的新增的 provideIn 属性来使用它。</strong></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>原理知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>angular</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>ssh 免密码登录linux</title>
+    <link href="/project/2019/07/08/ssh/"/>
+    <url>/project/2019/07/08/ssh/</url>
+    
+    <content type="html"><![CDATA[<p>假设：从A机器免密码跳转到B机器上，双方用户都要求是eshop</p><p>一、登录到A机器<br>     进入目录/home/eshop，运行ssh-keygen -t rsa<br>     会生成 隐藏目录 .ssh , 在该目录下会有 id_rsa（私钥） 和 id_rsa.pub（公钥） 两个文件</p><p>二、B机器<br>    复制A机器生成的id_rsa.pub（公钥）到/home/eshop/.ssh/id_rsa.pub<br>    复制内容到 /home/eshop/.ssh/authorized_keys（如果没有就新建）中，命令：cat id_rsa.pub &gt;&gt; authorized_keys<br>    修改authorized_keys权限为600，命令：chmod 600 authorized_keys<br>    chmod 700 ~/.ssh/</p><p>三、A机器<br>    执行<br>    ssh B机器ip</p><p>注：有时还得输密码配置，情况各异。<br>可能情况参照：<a href="https://blog.csdn.net/u010180815/article/details/78323596">https://blog.csdn.net/u010180815/article/details/78323596</a></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>ssh</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>锚点及void运算</title>
+    <link href="/project/2019/07/08/anchor/"/>
+    <url>/project/2019/07/08/anchor/</url>
+    
+    <content type="html"><![CDATA[<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">&lt;<span class="hljs-keyword">a</span> href=<span class="hljs-string">&quot;#&quot;</span>&gt;&lt;/<span class="hljs-keyword">a</span>&gt;<br>&lt;<span class="hljs-keyword">a</span> href=<span class="hljs-string">&quot;#none&quot;</span>&gt;&lt;/<span class="hljs-keyword">a</span>&gt;<br>&lt;<span class="hljs-keyword">a</span> href=<span class="hljs-string">&quot;###&quot;</span>&gt;&lt;/<span class="hljs-keyword">a</span>&gt;<br>&lt;<span class="hljs-keyword">a</span> href=<span class="hljs-string">&quot;javascript:&quot;</span>&gt;&lt;/<span class="hljs-keyword">a</span>&gt;    <span class="hljs-comment"> //错误写法，没写分号</span><br>&lt;<span class="hljs-keyword">a</span> href=<span class="hljs-string">&quot;javascript:;&quot;</span>&gt;&lt;/<span class="hljs-keyword">a</span>&gt;<br>&lt;<span class="hljs-keyword">a</span> href=<span class="hljs-string">&quot;javascript:void(0)&quot;</span>&gt;&lt;/<span class="hljs-keyword">a</span>&gt;   <span class="hljs-comment"> //错误写法，没写分号</span><br>&lt;<span class="hljs-keyword">a</span> href=<span class="hljs-string">&quot;javascript :void(0);&quot;</span>&gt;&lt;/<span class="hljs-keyword">a</span>&gt;<br></code></pre></td></tr></table></figure><ul><li>第1种，点击这个链接后，会让页面跳到页面顶部，在location.href后面增加#号。</li><li>第2种，点击这个链接后， 如果页面里面有id为none的元素，会执行锚点机制跳转到这个元素上缘。</li><li>第3种，不跳转，可以阻止默认的跳转行为，但是这个在后端代码中容易识别成注释，后面的代码不显示，之前遇到过这种坑，之后再没用过。</li><li>后面几种使用了javascript伪协议。</li><li>第5和7种相等，不发生任何变化。void运算符只运算，不返回任何结果。</li><li>为什么要列出4和6呢，有时候有些同学会忘记写分号，这样在IE6下面点击a标签，会造成页面中的gif暂停。</li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>css</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>package.json中dependencies 和 devDependencies 区别</title>
+    <link href="/project/2019/05/10/package/"/>
+    <url>/project/2019/05/10/package/</url>
+    
+    <content type="html"><![CDATA[<ul><li>当项目A发布到npm时，其他人npm install A时会一起下载A的dependencies，而A的devDependencies不会一起下载。</li><li>对于项目A自己而言，npm install时都会下载，没什么区别。</li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>基础知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>package</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>消除浏览器对input输入框的自动填充</title>
+    <link href="/project/2019/05/07/input-autocomplete/"/>
+    <url>/project/2019/05/07/input-autocomplete/</url>
+    
+    <content type="html"><![CDATA[<blockquote><p>参考url：<a href="https://www.cnblogs.com/mamimi/p/9138555.html">https://www.cnblogs.com/mamimi/p/9138555.html</a></p></blockquote><p>Mozilla官方文档建议的是 直接使用 autocomplete = ‘off’ 即可禁止输入框从浏览器cache获取数据，博主以前使用这个也就足够兼容浏览器了。</p><p>现在发现，却在chrome、firfox上有兼容性 无法解决。</p><p>后来查阅相关资料得到以下解决方法：</p><p><strong>1：可以设置一个默认的input用来接收浏览器的默认填充，并且设置css为dispaly：none<br>形如：</strong></p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">&lt;input<span class="hljs-built_in"> type </span>= <span class="hljs-string">&#x27;text&#x27;</span> <span class="hljs-attribute">style</span>=<span class="hljs-string">&#x27;display:none&#x27;</span>&gt;<br></code></pre></td></tr></table></figure><p>这样既不会影响用户的体验，也可以兼容所有的浏览器，但经过测试却发现，在chrome上不起作用，在firefox上也只能对type != password的 输入框起作用。</p><p><strong>2：autocomplete = ‘new-password’</strong></p><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">&lt;<span class="hljs-built_in">input</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">&#x27;text&#x27;</span> &gt;<br>&lt;<span class="hljs-built_in">input</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">&#x27;password&#x27;</span> autocomplete=<span class="hljs-string">&#x27;new-password&#x27;</span> &gt;<br></code></pre></td></tr></table></figure><p>使用上诉代码，在chrome上既可生效，用户名与密码都不会自动填充，但是firefox上任然会自动填充用户名</p><p><strong>3：结合上诉两个情况<br><input type='text' style='display:none'></strong></p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-comment">&lt;!-- 针对firefox --&gt;</span><br>用户名：<span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&#x27;text&#x27;</span> <span class="hljs-attr">autocomplete</span>=<span class="hljs-string">&#x27;off&#x27;</span>&gt;</span> <br>密码：<span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&#x27;password&#x27;</span> <span class="hljs-attr">autocomplete</span>=<span class="hljs-string">&#x27;new-password&#x27;</span>&gt;</span><br></code></pre></td></tr></table></figure><p>既可解决针对chrome与firefox内核的浏览器自动填充输入框的问题</p><p><strong>4：但是近期经过测试发现 这种方法还是不能解决firefox上密码框的历史输入，可以在3步骤上做这样的操作：</strong></p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><br>&lt;input <span class="hljs-attribute">type</span>=<span class="hljs-string">&#x27;password&#x27;</span> <span class="hljs-attribute">autocomplete</span>=<span class="hljs-string">&quot;new-password&quot;</span><br>       <span class="hljs-attribute">style</span>=<span class="hljs-string">&quot;background-color: #FFFFFF!important;&quot;</span><br>       readonly <span class="hljs-attribute">onfocus</span>=<span class="hljs-string">&quot;this.removeAttribute(&#x27;readonly&#x27;);&quot;</span><br>       <span class="hljs-attribute">onblur</span>=<span class="hljs-string">&quot;this.setAttribute(&#x27;readonly&#x27;,true);&quot;</span>/&gt;<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>项目相关</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>css</tag>
+      
+      <tag>js</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>JS中 [] == ![]结果为true，而 {} == !{}却为false</title>
+    <link href="/project/2019/03/10/compare/"/>
+    <url>/project/2019/03/10/compare/</url>
+    
+    <content type="html"><![CDATA[<h3 id="类型基本转换规则："><a href="#类型基本转换规则：" class="headerlink" title="类型基本转换规则："></a>类型基本转换规则：</h3><ol><li>如果有一个操作数是布尔值，则在比较相等性之前先将其转换为数值——false转换为0，而true转换为1；</li><li>如果一个操作数是字符串，另一个操作数是数值，在比较相等性之前先将字符串转换为数值</li><li>如果一个操作数是对象，另一个操作数不是，则调用对象的valueOf()方法，用得到的基本类型值按照前面的规则进行比较，如果对象没有valueOf()方法，则调用 toString()</li></ol><h3 id="这两个操作符在进行比较时则要遵循下列规则"><a href="#这两个操作符在进行比较时则要遵循下列规则" class="headerlink" title="这两个操作符在进行比较时则要遵循下列规则"></a>这两个操作符在进行比较时则要遵循下列规则</h3><ol><li>null 和undefined 是相等的</li><li>要比较相等性之前，不能将null 和 undefined 转换成其他任何值</li><li>如果有一个操作数是NaN，则相等操作符返回 false ，而不相等操作符返回 true。重要提示：即使两个操作数都是NaN，相等操作符也返回 false了；因为按照规则， NaN 不等于 NaN</li><li>如果两个操作数都是对象，则比较它们是不是同一个对象，如果两个操作数都指向同一个对象，则相等操作符返回 true；否则， 返回false</li></ol><h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><h4 id=""><a href="#" class="headerlink" title="[] == ! []"></a>[] == ! []</h4><p>[] == ! []   -&gt;   [] == false  -&gt;  [] == 0  -&gt;   ‘’ == 0   -&gt;  0 == 0   -&gt;  true</p><h4 id="-1"><a href="#-1" class="headerlink" title="{} == !{}"></a>{} == !{}</h4><p>{} == !{}  -&gt;  {} == false  -&gt; {} == 0 -&gt;  NaN == 0  -&gt;  false  </p>]]></content>
+    
+    
+    <categories>
+      
+      <category>原理知识</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>js</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  
+</search>
