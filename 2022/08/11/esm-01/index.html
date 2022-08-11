@@ -1,0 +1,565 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="ESModule。">
+  <meta name="author" content="peacejj">
+  <meta name="keywords" content="js">
+  
+  <title>ESModule-演进。 - 一只皮卡丘</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"peacejj.github.io","root":"/","version":"1.8.10","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"z0tbdI48i6n76Caa0MN6garl-gzGzoHsz","app_key":"bWBLgXQjDRhEJfygVbFPm92b","server_url":"https://z0tbdi48.lc-cn-n1-shared.com"}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>一只皮卡丘</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="ESModule-演进。">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-08-11 20:44" pubdate>
+        2022年8月11日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      3.2k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      36
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- LeanCloud 统计文章PV -->
+      <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="leancloud-page-views"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">ESModule-演进。</h1>
+            
+            <div class="markdown-body">
+              <h1 id="1、ESModule-规范"><a href="#1、ESModule-规范" class="headerlink" title="1、ESModule 规范"></a>1、ESModule 规范</h1><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><blockquote>
+<p>在 ES6 之前，社区自发的生产了一些模块加载方案，最主流的有 CommonJS 和 AMD 两种。&gt; 前者用于服务器，后者用于浏览器（借助第三方库的实现）。</p>
+<p>ES6 在语言标准的层面上，实现了模块功能，而且实现得相当简单，能满足绝大部分 CommonJS 和 AMD 的需求，成为浏览器和服务器通用的模块解决方案。</p>
+</blockquote>
+<p>在 ES6 提出了 ESModule 作为语言标准以后，浏览器会原生支持这种规范来实现 JavaScript 的模块系统。同样地，作为跑在服务端的 JavaScript，Node.js 也会支持这一规范。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// commonjs</span><br><span class="hljs-keyword">const</span> axios = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;axios&#x27;</span>)<br><br><span class="hljs-comment">// amd</span><br><span class="hljs-built_in">require</span>([<span class="hljs-string">&#x27;axios&#x27;</span>], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">axios</span>) </span>&#123;&#125;)<br><br><span class="hljs-comment">// esmodule</span><br><span class="hljs-keyword">import</span> axios <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./node_modules/axios/axios.js&#x27;</span><br><br></code></pre></td></tr></table></figure>
+
+<p><em>注：ECMAScript 最新提案已经通过，可以通过 importMap 来管理 module import paths，参考内容可通过识别下方二维码访问。</em></p>
+<h3 id="服务端的实现"><a href="#服务端的实现" class="headerlink" title="服务端的实现"></a>服务端的实现</h3><h4 id="CommonJS"><a href="#CommonJS" class="headerlink" title="CommonJS"></a>CommonJS</h4><p>在 ESModule 规范提出以前，Node.js 核心基于内置的 Module 模块来实现了 CommonJS 的模块系统，但是这个模块系统不是 JavaScript 官方标准提出的，而是 Node.js 的开发者给 Node.js 的实现，用于实现在服务器上将 JavaScript 原生模块化。这一标准并没有在浏览器中得到支持。</p>
+<h4 id="ESModule"><a href="#ESModule" class="headerlink" title="ESModule"></a>ESModule</h4><p>在 JavaScript 本身的模块系统进标准后，Node.js 势必要去实现这个标准。但是，在 ESModule 标准没有被提出之前，此前基于 CommonJS 模块规范实现的包不可能就此放弃，而此前几乎所有的第三方依赖的包都是基于 CommonJS 的标准去实现，这时，如果 Node.js 为了兼容 ESModule 而放弃 CommonJS，就会导致整个 Node.js 的生态出现破坏性的兼容问题，所以最好的方案就是新的模块系统即实现新的 ESModule 规范，又可以兼容原先的 CommonJS 模块方案</p>
+<h4 id="兼容问题"><a href="#兼容问题" class="headerlink" title="兼容问题"></a>兼容问题</h4><p><em>由于 CommonJS 本质上与 ESModule 还是存在很有底层的设计冲突，所以在兼容层的实现上还是存在很多问题，这里不做赘述，有兴趣的读者可以自行搜索，下面也提供了一篇参考文章，可通过识别下方二维码访问。</em></p>
+<p>经过一系列的讨论，最终兼容的方案确定了下来：ESModule 标准的模块以后缀名 .mjs 为结尾， CommonJS 的模块依然以 .js 文件作为后缀，同时，在 Node.js &gt;= V13 中，在 package.json 中引入了新的模块定义字段</p>
+<figure class="highlight d"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs d"><span class="hljs-comment">// esmA/index.mjs</span><br><span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-literal">null</span><br><br><span class="hljs-comment">// esmB/index.js</span><br><span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-literal">null</span><br><br><span class="hljs-comment">// esmB/package.json</span><br>&#123;<br>    <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;module&quot;</span><br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>即，后缀为 .mjs 的文件和后缀为 .js 但是在 package.json 中声明了 “type”: “module” 的模块都会在 Node.js 中被解析为 ESModule 模块</p>
+<h3 id="浏览器实现"><a href="#浏览器实现" class="headerlink" title="浏览器实现"></a>浏览器实现</h3><p>现今主流的浏览器，除了IE，基本上在两三年就已经默默实现了基于 ESModule 规范的模块系统。</p>
+<p>到这里，看似 Node.js 的已经兼容了 CommonJS 和 ESModule 规范，而且主流浏览器也已经基于 ESModule 规范实现了原生的模块系统，那么是不是意味着可以在浏览器上直接加载此前基于 CommonJS 开发的 npm 包了呢？</p>
+<h1 id="2、第三方依赖困境"><a href="#2、第三方依赖困境" class="headerlink" title="2、第三方依赖困境"></a>2、第三方依赖困境</h1><h3 id="Node-js-的模块解析机制"><a href="#Node-js-的模块解析机制" class="headerlink" title="Node.js  的模块解析机制"></a>Node.js  的模块解析机制</h3><p>在 Node.js 中，引入第三方依赖不需要写相对路径，只需要依赖名，而且也不需要指定入口文件。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">const</span> axios = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;axios&#x27;</span>)<br><span class="hljs-comment">// =&gt; 自动拼接 node_modules 路径</span><br><span class="hljs-keyword">const</span> axios = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;/User/xxxx/workspace/node_modules/axios&#x27;</span>)<br><span class="hljs-comment">// =&gt; 自动解析 package.json，拼接入口</span><br><span class="hljs-keyword">const</span> axios = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;/User/xxxx/workspace/node_modules/axios/axios.js&#x27;</span>)<br><br></code></pre></td></tr></table></figure>
+
+<p>这是因为 Node.js 模块系统的核心代码中做了对第三方依赖的路径解析有很多的兼容性处理，包括但不限于：</p>
+<ol>
+<li>自动拼接 node_moduoles 中第三方依赖的完整路径</li>
+<li>自动解析 package.json 中的入口字段，拼接入口路径到上一步的完整路径中</li>
+<li>自动解析是否需要添加后缀或者补全 index 路径</li>
+</ol>
+<h3 id="Webpack-的模块解析机制"><a href="#Webpack-的模块解析机制" class="headerlink" title="Webpack 的模块解析机制"></a>Webpack 的模块解析机制</h3><p>由于 Webpack 的存在，过去 Web App 的开发都是基于 Bundle 的开发模式。即，所有的第三方依赖最终都会被打成一个大的 bundle.js。</p>
+<p>早先没有 ESModule 规范前，大部分包都是基于 CommonJS 开发，而 Webpack bundle 的过程中会自动注入 Node.js 的 CommonJS 模块处理逻辑，因此带给开发者的体验是，使用 Webpack 开发 Web App 时使用的 CommonJS 语法，与开发 Node.js App 时使用的 CommonJS 语法，带来感官上的体验是一致的。</p>
+<p>但是其实这两者在底层上的实现是完全不同的， Node.js 的 CommonJS 实现是基于内置的 Module 等模块，在 Node.js Core 层实现的底层逻辑；而 Webpack 中处理 CommonJS 的逻辑是 Webpack 自己实现的一套解析逻辑，只是 Webpack 的维护团队为了使其在处理 CommonJS 时与 Node.js 中 CommonJS 处理逻辑保持一致，刻意做了一些兼容实现，来保证暴露给用户的顶层接口与 Node.js 保持一致。</p>
+<p>因此，传统的第三方依赖能够在 Webpack CLI App 中正常使用 CommonJS 语法得益于 Webpack 实现的 CommonJS 模块解析逻辑与 Node.js 的 CommonJS 模块解析逻辑保持了一致。</p>
+<h3 id="浏览器的模块解析机制"><a href="#浏览器的模块解析机制" class="headerlink" title="浏览器的模块解析机制"></a>浏览器的模块解析机制</h3><p>通过 Node.js 和 Webpack 的模块解析机制，大家应该能明白，其实 Node.js 和 Webpack 之所以能加载 CommonJS 的插件，是因为它们各自做了大量的底层实现。而在浏览器中，是不支持原生的 CommonJS 模块加载机制的，因此，哪怕浏览器已经实现了基于 ESModule 规范的模块加载机制，也依然不能使用 Node.js 生态中的 CommonJS 模块。</p>
+<p>出于这些原因，为了能够在浏览器中继续使用基于 CommonJS 规范开发的第三方依赖，下一代 Web App 开发工具应运而生。</p>
+<h1 id="3、下一代-Web-App-开发模式"><a href="#3、下一代-Web-App-开发模式" class="headerlink" title="3、下一代 Web App 开发模式"></a>3、下一代 Web App 开发模式</h1><p>为了避免因为实现 ESModule 规范带来的 CommonJS 生态的第三方依赖包无法在浏览器使用的问题，许多工具随之产生。</p>
+<h3 id="CommonJS-To-ESModule"><a href="#CommonJS-To-ESModule" class="headerlink" title="CommonJS To ESModule"></a>CommonJS To ESModule</h3><p>浏览器无法使用 CommonJS 模块的最根本原因就是浏览器本身并没有实现任何 CommonJS 模块加载机制，而在主流浏览器纷纷支持 ESModule 规范之后，解决这个问题的根本办法就是将 CommonJS 模块转化为 ESModule 模块，现今社区主流的转化方案大概如下：</p>
+<ul>
+<li>JSPM （<a target="_blank" rel="noopener" href="https://jspm.dev/@babel/core%EF%BC%89">https://jspm.dev/@babel/core）</a></li>
+<li>Skypack（前 Pika）（<a target="_blank" rel="noopener" href="http://cdn.skypack.dev/@babel/core%EF%BC%89">http://cdn.skypack.dev/@babel/core）</a></li>
+<li>ESM.sh（<a target="_blank" rel="noopener" href="http://esm.sh/@babel/core">http://esm.sh/@babel/core</a>)<br>这些工具的处理方案大致都是利用转换（构建）工具，比如 Rollup、Esbuild 等，去给模块语法做升级操作，将 CommonJS 的语法升级为 ESModule 规范的语法，同时将其中引入另外第三方依赖的路径转化拼接为对应的 ESModule 路径</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">const</span> axios = reuqire(<span class="hljs-string">&#x27;axios&#x27;</span>)<br><span class="hljs-built_in">module</span>.exports = axios<br><span class="hljs-comment">// =&gt;</span><br><span class="hljs-keyword">import</span> axios <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;/esm/axios.js&#x27;</span><br><span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> axios<br><br></code></pre></td></tr></table></figure>
+<p>当有了这些工具之后，我们就能在浏览器中直接原生的去使用这些第三方依赖。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml">//index.html<br><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;module&quot;</span>&gt;</span><span class="javascript"></span><br><span class="javascript">    <span class="hljs-keyword">import</span> axiso <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;http://cdn.skypack.dev/axios&#x27;</span></span><br><span class="javascript">    <span class="hljs-comment">// TODO...</span></span><br><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br></code></pre></td></tr></table></figure>
+<p>但是笔者实践过一段时间后，用这种最简单的方式来使用第三方依赖还是会遇到很多问题，最明显的就是请求爆炸。</p>
+<p>比如一个 Antd 组件库，里面使用到的第三方依赖就有成百上千个，由于没有了 Bundle，加载这些依赖的过程就直接变成了网络请求，这就导致下载一个简简单单的 Antd 组件库，需要发送接近 2000 个网络请求，这一方面加重了首屏渲染的压力，另一方面给整个开发链路加重了负担。</p>
+<p>基于这种背景和发展趋势，下一代 Web App 开发工具也随之诞生。</p>
+<h3 id="Snowpack-amp-Vite"><a href="#Snowpack-amp-Vite" class="headerlink" title="Snowpack &amp; Vite"></a>Snowpack &amp; Vite</h3><p>由于上述说到加载第三方依赖时可能会遇到的请求爆炸的问题，因此在本地开发时对于第三方依赖的 Bundle 这个过程其实还是不可省略的。</p>
+<p>在 Webpack 原先的理念中，所有的文件都会被当作一个模块，并打包到最终的 Bundle 中，这就导致了整个 Bundle 的过程几乎不可复用，即每一次启动 Dev Server 时，都会重新做一次 Bundle，而这是非常耗费性能和时间的。但是在开发的过程中，第三方依赖的代码基本上是维持不变的，只用下载一次，就不会再发生变化，而且浏览器已经原生支持基于了 ESModule 规范的模块加载机制，开发工具完全可以不用再接管第三方依赖的加载，而是可以将这个过程全部交给浏览器本身来进行。</p>
+<p>基于此，第三方依赖和源代码可以拆分成两个维度的概念，开发工具可以不用再将所有的源代码和第三方依赖全部 Bundle 到一起，而是可以将第三方依赖和源代码拆分开来单独进行处理。将不会再发生变化的第三方依赖单独 Bundle 为一个 Dep Chunks，处理一次，到处使用。</p>
+<p>基于这个理念，Snowpack 和 Vite也逐渐地崭露头角，这里对这两种新一代的 ESM 开发工具不再展开做介绍，有兴趣的读者可以自行去了解。</p>
+<h1 id="4、推进困难"><a href="#4、推进困难" class="headerlink" title="4、推进困难"></a>4、推进困难</h1><p>上述说到，新一代的开发工具和开发模式是利用浏览器原生的模块加载机制去加载第三方依赖，开发工具只需要将依赖 Bundle 一次，后续就不用再多做处理。</p>
+<p>这种新的开发模式一方面降低了开发工具的复杂性（利用浏览器原生的模块加载机制，开发工具不再接管依赖的加载），另一方面大大提升的应用的启动速度，和本地开发的调试体验（不用在每次启动 dev server 时去重新处理 node_modules）。</p>
+<p>但是从整个生态的大环境来看，这种新一代的开发模式推进情况却不容乐观。</p>
+<p>笔者经常这段时间的使用下来，也发现了这些开发工具目前的通病：</p>
+<h3 id="生态问题"><a href="#生态问题" class="headerlink" title="生态问题"></a>生态问题</h3><p>生态不完善，很多 Webpack 已经支持很好的功能还没有得到官方的支持。</p>
+<h3 id="CommonJS-向-ESModule-的转换问题"><a href="#CommonJS-向-ESModule-的转换问题" class="headerlink" title="CommonJS 向 ESModule 的转换问题"></a>CommonJS 向 ESModule 的转换问题</h3><p>对很多第三方依赖的转化处理不完善，缺失完善的解决机制。</p>
+<p>上面也说到，要将第三方依赖的加载全部交给浏览器本身来接管，那么首先开发工具要做的就是将第三方依赖全部转换为 ESModule 的模块，而现在 npm 上的绝大部分包都是只支持 CommonJS 版本的，因此这里的转换过程通常都是由开发工具自己来接管，而这其中有很多底层的问题并没有得到好的解决。</p>
+<h4 id="动态引入与静态解析"><a href="#动态引入与静态解析" class="headerlink" title="动态引入与静态解析"></a>动态引入与静态解析</h4><p>CommonJS 中，模块的引入与导出是动态的语法，因此要想拿到一个模块完整的导入或者导出，必须得等到那个模块具体执行的时候才能确认。</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-comment">// mnoduleA.js</span><br><span class="hljs-function"><span class="hljs-title">init</span><span class="hljs-params">()</span></span><br><br>function init () &#123;<br>    exports<span class="hljs-selector-class">.a</span> = <span class="hljs-number">1</span><br>&#125;<br><span class="hljs-comment">// index.js</span><br><span class="hljs-function"><span class="hljs-title">require</span><span class="hljs-params">(<span class="hljs-string">&#x27;./moduleA&#x27;</span>)</span></span> <span class="hljs-comment">// &#123; a: 1 &#125;</span><br><br></code></pre></td></tr></table></figure>
+
+<p>而在 ESModule 中，模块语法是需要被解释器静态解析的，这就要求导出语法必须声明在作用域的最顶层。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// Success</span><br><span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> a = <span class="hljs-number">1</span><br><br><span class="hljs-comment">// Error</span><br>init ()<br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">init</span>(<span class="hljs-params"></span>) </span>&#123;<br>    <span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> a = <span class="hljs-number">1</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="具名导出与默认导出"><a href="#具名导出与默认导出" class="headerlink" title="具名导出与默认导出"></a>具名导出与默认导出</h4><p>在 CommonJS 中，对具名导出和默认导出是没有具体做限定的，nodejs的一个模块中，全局的 exports === module.exports。</p>
+<p>而在 ESModule 中，对具名导出和默认导出做出了一个具体的限定，而且在导入语法中也有明显的区别。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// module.js</span><br><span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> a = <span class="hljs-number">1</span><br><span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> &#123; <span class="hljs-attr">a</span>: <span class="hljs-number">2</span> &#125;<br><span class="hljs-comment">// index.js</span><br><span class="hljs-keyword">import</span> &#123; a &#125; <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./module.js&#x27;</span> <span class="hljs-comment">// 1</span><br><br><span class="hljs-keyword">import</span> a <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./module.js&#x27;</span><br><span class="hljs-built_in">console</span>.info(a.a) <span class="hljs-comment">// 2</span><br><br><span class="hljs-keyword">import</span> * <span class="hljs-keyword">as</span> a <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./module./js&#x27;</span><br><span class="hljs-built_in">console</span>.info(a.a) <span class="hljs-comment">// 1</span><br><span class="hljs-built_in">console</span>.info(a.default) <span class="hljs-comment">// 2</span><br></code></pre></td></tr></table></figure>
+
+<p>同时，在 ESModule 规范推进的过程中，有许多如 exports.default、exports.__esModule 等利用语法来兼容 ESModule 和 CommonJS 的废案往往也都被 babel 实现，而且被许多开发者使用并且发布到了 npm 上，这就导致了现在 npm 上的许多包中有大量的废弃兼容性代码，而这些代码往往会对开发工具的转化造成阻碍。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E9%A1%B9%E7%9B%AE%E7%9B%B8%E5%85%B3/">项目相关</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/esm/">esm</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/20/react-fiber/">
+                        <span class="hidden-mobile">React fiber 起因原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+
+  <script defer src="/js/leancloud.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
